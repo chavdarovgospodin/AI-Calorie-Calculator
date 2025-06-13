@@ -1,0 +1,172 @@
+# .github/workflows/ci.yml
+name: 🔍 CI - Code Quality & Tests
+
+# КОГА да се изпълни този workflow
+on:
+  push:
+    branches: [ main, dev, develop ]  # При push в тези branches
+  pull_request:
+    branches: [ main ]                # При PR към main
+
+# ENVIRONMENT VARIABLES за целия workflow
+env:
+  NODE_VERSION: '18'
+  
+# JOBS (могат да се изпълняват паралелно)
+jobs:
+  # JOB 1: Проверка на Backend кода
+  backend-checks:
+    name: 🏗️ Backend Checks
+    runs-on: ubuntu-latest
+    
+    # Working directory за всички стъпки
+    defaults:
+      run:
+        working-directory: ./apps/backend
+    
+    steps:
+    # СТЪПКА 1: Взиме кода от repo
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+      
+    # СТЪПКА 2: Setup Node.js
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: './apps/backend/package-lock.json'
+        
+    # СТЪПКА 3: Инсталирай dependencies
+    - name: 📦 Install Dependencies
+      run: npm ci
+      
+    # СТЪПКА 4: Провери TypeScript types
+    - name: 🔍 TypeScript Check
+      run: npm run type-check
+      continue-on-error: false  # Спри ако има грешка
+      
+    # СТЪПКА 5: Лinting (code style проверка)
+    - name: 🎨 ESLint Check
+      run: npm run lint
+      
+    # СТЪПКА 6: Форматиране проверка
+    - name: 💅 Prettier Check
+      run: npm run format:check
+      
+    # СТЪПКА 7: Build проверка
+    - name: 🏗️ Build Check
+      run: npm run build
+      
+    # СТЪПКА 8: Пусни unit tests
+    - name: 🧪 Run Tests
+      run: npm run test
+      env:
+        # Mock environment за тестовете
+        NODE_ENV: test
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'http://localhost:3000' }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET || 'test-jwt-secret-key-for-ci' }}
+        
+    # СТЪПКА 9: Test Coverage (опционално)
+    - name: 📊 Test Coverage
+      run: npm run test:coverage
+      continue-on-error: true  # Не спира при грешка
+      
+    # СТЪПКА 10: Upload coverage reports (за по-напредналм)
+    - name: 📈 Upload Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      if: success()
+      with:
+        file: ./apps/backend/coverage/lcov.info
+        flags: backend
+        name: backend-coverage
+      continue-on-error: true
+
+  # JOB 2: Security проверки
+  security-checks:
+    name: 🔒 Security Audit
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./apps/backend
+        
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: './apps/backend/package-lock.json'
+        
+    - name: 📦 Install Dependencies
+      run: npm ci
+      
+    # Проверка за известни уязвимости
+    - name: 🛡️ Security Audit
+      run: npm audit --audit-level moderate
+      continue-on-error: true
+      
+    # Проверка за outdated packages
+    - name: 📅 Check Outdated Packages
+      run: npm outdated
+      continue-on-error: true
+
+  # JOB 3: Docker build проверка
+  docker-build:
+    name: 🐳 Docker Build Test
+    runs-on: ubuntu-latest
+    needs: [backend-checks]  # Изчака backend-checks да завърши
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+      
+    # Тества дали Docker image се build-ва правилно
+    - name: 🐳 Build Docker Image
+      run: |
+        docker build -t calorie-tracker-backend:test ./apps/backend
+        
+    # Тества дали container стартира
+    - name: 🏃 Test Container Start
+      run: |
+        docker run --rm -d --name test-container \
+          -e NODE_ENV=test \
+          -e JWT_SECRET=test-secret \
+          -p 3000:3000 \
+          calorie-tracker-backend:test
+        
+        # Изчакай малко да стартира
+        sleep 10
+        
+        # Тествай health endpoint
+        curl -f http://localhost:3000/health || exit 1
+        
+        # Спри container
+        docker stop test-container
+
+  # JOB 4: Notification при грешка
+  notify-on-failure:
+    name: 📧 Notify on Failure
+    runs-on: ubuntu-latest
+    needs: [backend-checks, security-checks, docker-build]
+    if: failure()  # Само ако някой job е failed
+    
+    steps:
+    - name: 📧 Send Failure Notification
+      run: |
+        echo "❌ CI Pipeline Failed!"
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Author: ${{ github.actor }}"
+        
+        # Тук можеш да добавиш Discord/Slack notification
+        # curl -X POST -H 'Content-type: application/json' \
+        #   --data '{"text":"CI Failed for ${{ github.ref_name }}"}' \
+        #   ${{ secrets.SLACK_WEBHOOK_URL }}
+
+# Може да добавиш и status badge в README:
+# [![CI](https://github.com/USERNAME/REPO/workflows/CI/badge.svg)](https://github.com/USERNAME/REPO/actions)

@@ -1,0 +1,223 @@
+# .github/workflows/pr-checks.yml
+name: 🔀 Pull Request Checks
+
+# Изпълнява се САМО при Pull Requests към main
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # Quick checks за PR
+  pr-validation:
+    name: 📋 PR Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Нужно за сравнение с main
+        
+    # Провери размера на PR
+    - name: 📏 Check PR Size
+      run: |
+        CHANGED_FILES=$(git diff --name-only origin/main...HEAD | wc -l)
+        CHANGED_LINES=$(git diff --shortstat origin/main...HEAD | grep -oE '[0-9]+ insertions|[0-9]+ deletions' | grep -oE '[0-9]+' | awk '{sum += $1} END {print sum}')
+        
+        echo "Changed files: $CHANGED_FILES"
+        echo "Changed lines: $CHANGED_LINES"
+        
+        # Warning ако PR е твърде голям
+        if [ "$CHANGED_FILES" -gt 50 ] || [ "$CHANGED_LINES" -gt 1000 ]; then
+          echo "⚠️ Large PR detected! Consider splitting into smaller PRs."
+          echo "Files: $CHANGED_FILES (recommended: < 50)"
+          echo "Lines: $CHANGED_LINES (recommended: < 1000)"
+        fi
+        
+    # Провери commit messages
+    - name: 📝 Check Commit Messages
+      run: |
+        echo "Checking commit messages..."
+        git log --oneline origin/main..HEAD
+        
+        # Простa проверка за conventional commits (опционално)
+        INVALID_COMMITS=$(git log --oneline origin/main..HEAD | grep -v -E '^[a-f0-9]+ (feat|fix|docs|style|refactor|test|chore|ci)(\(.+\))?: .+' | wc -l)
+        
+        if [ "$INVALID_COMMITS" -gt 0 ]; then
+          echo "⚠️ Some commits don't follow conventional format"
+          echo "Example: 'feat: add user authentication' or 'fix(api): resolve validation bug'"
+        fi
+
+  # Бърза code quality проверка
+  quick-quality-check:
+    name: ⚡ Quick Quality Check
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./apps/backend
+        
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: './apps/backend/package-lock.json'
+        
+    - name: 📦 Install Dependencies
+      run: npm ci
+      
+    # Най-важните проверки
+    - name: 🔍 TypeScript & Lint Check
+      run: |
+        npm run type-check
+        npm run lint:check
+        
+    - name: ⚡ Quick Build Test
+      run: npm run build
+
+  # Auto-assign reviewers
+  assign-reviewers:
+    name: 👥 Assign Reviewers
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'  # Само при нови PRs
+    
+    steps:
+    - name: 👥 Auto-assign Reviewers
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const reviewers = ['your-github-username']; // Добави своя username
+          
+          await github.rest.pulls.requestReviewers({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: context.issue.number,
+            reviewers: reviewers
+          });
+          
+          console.log('Assigned reviewers:', reviewers);
+
+  # Добави labels автоматично
+  auto-label:
+    name: 🏷️ Auto Label
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: 🏷️ Add Labels Based on Changes
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const { execSync } = require('child_process');
+          
+          // Виж какви файлове са променени
+          const changedFiles = execSync('git diff --name-only origin/main...HEAD').toString().split('\n').filter(f => f);
+          
+          console.log('Changed files:', changedFiles);
+          
+          const labels = [];
+          
+          // Backend changes
+          if (changedFiles.some(f => f.startsWith('apps/backend/'))) {
+            labels.push('backend');
+          }
+          
+          // Mobile changes
+          if (changedFiles.some(f => f.startsWith('apps/mobile/'))) {
+            labels.push('mobile');
+          }
+          
+          // Documentation changes
+          if (changedFiles.some(f => f.includes('README') || f.includes('.md'))) {
+            labels.push('documentation');
+          }
+          
+          // Database changes
+          if (changedFiles.some(f => f.includes('migration') || f.includes('schema'))) {
+            labels.push('database');
+          }
+          
+          // GitHub Actions changes
+          if (changedFiles.some(f => f.includes('.github/workflows'))) {
+            labels.push('ci/cd');
+          }
+          
+          // Size labels
+          if (changedFiles.length > 30) {
+            labels.push('size/large');
+          } else if (changedFiles.length > 10) {
+            labels.push('size/medium');
+          } else {
+            labels.push('size/small');
+          }
+          
+          if (labels.length > 0) {
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: labels
+            });
+            
+            console.log('Added labels:', labels);
+          }
+
+  # PR Summary comment
+  pr-summary:
+    name: 📊 PR Summary
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: 📊 Generate PR Summary
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const { execSync } = require('child_process');
+          
+          // Statistics
+          const changedFiles = execSync('git diff --name-only origin/main...HEAD').toString().split('\n').filter(f => f);
+          const addedLines = execSync('git diff --shortstat origin/main...HEAD').toString().match(/(\d+) insertions?/)?.[1] || '0';
+          const deletedLines = execSync('git diff --shortstat origin/main...HEAD').toString().match(/(\d+) deletions?/)?.[1] || '0';
+          
+          const summary = `## 📊 PR Summary
+          
+          **Changes:**
+          - 📁 Files changed: ${changedFiles.length}
+          - ➕ Lines added: ${addedLines}
+          - ➖ Lines deleted: ${deletedLines}
+          
+          **Modified files:**
+          ${changedFiles.map(f => `- \`${f}\``).join('\n')}
+          
+          **Checklist for reviewer:**
+          - [ ] Code follows project conventions
+          - [ ] Tests are included (if applicable)
+          - [ ] Documentation is updated (if needed)
+          - [ ] No breaking changes (or properly documented)
+          
+          **Auto-checks status:** ⏳ Running...
+          `;
+          
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: summary
+          });
