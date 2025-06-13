@@ -1,4 +1,3 @@
-# .github/workflows/pr-checks.yml
 name: 🔀 Pull Request Checks
 
 # Изпълнява се САМО при Pull Requests към main

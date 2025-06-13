@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AiService } from './ai.service';
+import { AiValidationService } from './validation/ai-validation.service';
 
 @Module({
-  providers: [AiService],
-  exports: [AiService],
+  providers: [AiService, AiValidationService],
+  exports: [AiService, AiValidationService],
 })
 export class AiModule {
   constructor(private aiService: AiService) {
-    // Test AI connection on module initialization
     this.testAiConnection();
   }
 

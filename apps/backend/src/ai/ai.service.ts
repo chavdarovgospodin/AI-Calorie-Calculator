@@ -2,13 +2,17 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NutritionAnalysis } from './interfaces/nutrition-analysis.interface';
+import { AiValidationService } from './validation/ai-validation.service';
 
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
   private genAI: GoogleGenerativeAI;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private aiValidationService: AiValidationService
+  ) {
     const apiKey = configService.get<string>('GOOGLE_AI_API_KEY');
 
     if (!apiKey) {
@@ -30,6 +34,24 @@ export class AiService {
   async analyzeTextFood(description: string): Promise<NutritionAnalysis> {
     const startTime = Date.now();
     this.logger.log(`🔍 Analyzing food text: "${description}"`);
+
+    const validation =
+      await this.aiValidationService.validateTextFood(description);
+
+    if (!validation.isValid) {
+      this.logger.warn(`❌ Text validation failed: ${validation.reason}`);
+      throw this.aiValidationService.createValidationError(validation);
+    }
+
+    if (validation.confidence < 0.7) {
+      this.logger.warn(
+        `⚠️ Low confidence text (${Math.round(validation.confidence * 100)}%): ${description}`
+      );
+    } else {
+      this.logger.log(
+        `✅ Text validation passed (${Math.round(validation.confidence * 100)}% confidence)`
+      );
+    }
 
     const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
@@ -75,7 +97,6 @@ export class AiService {
 
       this.logger.debug(`AI Response: ${text}`);
 
-      // Extract JSON from response
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No valid JSON found in AI response');
@@ -83,7 +104,6 @@ export class AiService {
 
       const analysis: NutritionAnalysis = JSON.parse(jsonMatch[0]);
 
-      // Validate the response structure
       this.validateNutritionAnalysis(analysis);
 
       const processingTime = Date.now() - startTime;
@@ -117,6 +137,24 @@ export class AiService {
     this.logger.log(
       `📸 Analyzing food image (${Math.round(imageBase64.length / 1024)}KB)`
     );
+
+    const validation =
+      await this.aiValidationService.validateImageFood(imageBase64);
+
+    if (!validation.isValid) {
+      this.logger.warn(`❌ Image validation failed: ${validation.reason}`);
+      throw this.aiValidationService.createValidationError(validation);
+    }
+
+    if (validation.confidence < 0.6) {
+      this.logger.warn(
+        `⚠️ Low confidence image (${Math.round(validation.confidence * 100)}%)`
+      );
+    } else {
+      this.logger.log(
+        `✅ Image validation passed (${Math.round(validation.confidence * 100)}% confidence)`
+      );
+    }
 
     const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
@@ -176,7 +214,6 @@ export class AiService {
 
       const analysis: NutritionAnalysis = JSON.parse(jsonMatch[0]);
 
-      // Validate the response structure
       this.validateNutritionAnalysis(analysis);
 
       const processingTime = Date.now() - startTime;
@@ -220,7 +257,6 @@ export class AiService {
       }
     }
 
-    // Validate numeric fields
     const numericFields = ['totalCalories', 'protein', 'carbs', 'fat'];
     for (const field of numericFields) {
       if (typeof analysis[field] !== 'number' || analysis[field] < 0) {
@@ -228,12 +264,10 @@ export class AiService {
       }
     }
 
-    // Validate foods array
     if (!Array.isArray(analysis.foods)) {
       throw new Error('Foods must be an array');
     }
 
-    // Validate each food item
     analysis.foods.forEach((food: any, index: number) => {
       const requiredFoodFields = [
         'name',
