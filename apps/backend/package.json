@@ -19,7 +19,6 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prebuild": "rimraf dist",
     "type-check": "tsc --noEmit --skipLibCheck",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "test:coverage": "jest --coverage",
