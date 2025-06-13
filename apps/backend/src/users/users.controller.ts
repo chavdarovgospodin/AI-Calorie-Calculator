@@ -23,7 +23,7 @@ export class UsersController {
   @Get('profile')
   async getProfile(@Request() req) {
     this.logger.log(`Profile request from user: ${req.user.email}`);
-    
+
     try {
       return await this.usersService.getUserProfile(req.user.id);
     } catch (error) {
@@ -35,7 +35,7 @@ export class UsersController {
   @Put('profile')
   async updateProfile(@Request() req, @Body() updateData: UpdateProfileDto) {
     this.logger.log(`Profile update request from user: ${req.user.email}`);
-    
+
     try {
       return await this.usersService.updateProfile(req.user.id, updateData);
     } catch (error) {
@@ -47,7 +47,7 @@ export class UsersController {
   @Delete('profile')
   async deleteProfile(@Request() req) {
     this.logger.log(`Profile deletion request from user: ${req.user.email}`);
-    
+
     try {
       return await this.usersService.deleteProfile(req.user.id);
     } catch (error) {
@@ -59,7 +59,7 @@ export class UsersController {
   @Get('stats')
   async getUserStats(@Request() req) {
     this.logger.log(`Stats request from user: ${req.user.email}`);
-    
+
     // Placeholder for user statistics
     return {
       message: 'User statistics endpoint - coming soon',
@@ -68,8 +68,8 @@ export class UsersController {
         'Total food entries',
         'Average daily calories',
         'Weight progress',
-        'Goal achievement rate'
-      ]
+        'Goal achievement rate',
+      ],
     };
   }
 }

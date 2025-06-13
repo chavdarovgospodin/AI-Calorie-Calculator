@@ -4,8 +4,8 @@ export class AnalyzeFoodTextDto {
   @IsString({ message: 'Description must be a string' })
   @IsNotEmpty({ message: 'Description cannot be empty' })
   @MaxLength(300, { message: 'Description cannot exceed 300 characters' })
-  @Matches(/^[a-zA-Zа-яА-Я0-9\s\.,\-\+\(\)]+$/, { 
-    message: 'Description contains invalid characters' 
+  @Matches(/^[a-zA-Zа-яА-Я0-9\s\.,\-\+\(\)]+$/, {
+    message: 'Description contains invalid characters',
   })
   description: string;
 }

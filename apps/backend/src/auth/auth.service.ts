@@ -1,10 +1,19 @@
-import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { SupabaseService } from 'src/database/supabase.service';
-import { ActivityLevel, Gender, Goal } from 'src/common/interfaces/user.interface';
+import {
+  ActivityLevel,
+  Gender,
+  Goal,
+} from 'src/common/interfaces/user.interface';
 import { calculateDailyCalories } from 'src/common/utils';
 
 @Injectable()
@@ -13,7 +22,7 @@ export class AuthService {
 
   constructor(
     private supabaseService: SupabaseService,
-    private jwtService: JwtService,
+    private jwtService: JwtService
   ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
@@ -32,10 +41,11 @@ export class AuthService {
       }
 
       // Register with Supabase Auth
-      const { data: authData, error: authError } = await this.supabaseService.client.auth.signUp({
-        email: registerDto.email,
-        password: registerDto.password,
-      });
+      const { data: authData, error: authError } =
+        await this.supabaseService.client.auth.signUp({
+          email: registerDto.email,
+          password: registerDto.password,
+        });
 
       if (authError) {
         this.logger.error(`Supabase auth error: ${authError.message}`);
@@ -53,30 +63,34 @@ export class AuthService {
         registerDto.height,
         registerDto.weight,
         registerDto.goal,
-        registerDto.activity_level || ActivityLevel.MODERATELY_ACTIVE,
+        registerDto.activity_level || ActivityLevel.MODERATELY_ACTIVE
       );
 
       // Create user profile in our users table
-      const { data: userData, error: userError } = await this.supabaseService.client
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          email: registerDto.email,
-          age: registerDto.age,
-          gender: registerDto.gender,
-          height: registerDto.height,
-          weight: registerDto.weight,
-          goal: registerDto.goal,
-          daily_calorie_goal: dailyCalorieGoal,
-          activity_level: registerDto.activity_level || ActivityLevel.MODERATELY_ACTIVE,
-        })
-        .select()
-        .single();
+      const { data: userData, error: userError } =
+        await this.supabaseService.client
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            email: registerDto.email,
+            age: registerDto.age,
+            gender: registerDto.gender,
+            height: registerDto.height,
+            weight: registerDto.weight,
+            goal: registerDto.goal,
+            daily_calorie_goal: dailyCalorieGoal,
+            activity_level:
+              registerDto.activity_level || ActivityLevel.MODERATELY_ACTIVE,
+          })
+          .select()
+          .single();
 
       if (userError) {
         this.logger.error(`User profile creation error: ${userError.message}`);
         // Clean up auth user if profile creation fails
-        await this.supabaseService.client.auth.admin.deleteUser(authData.user.id);
+        await this.supabaseService.client.auth.admin.deleteUser(
+          authData.user.id
+        );
         throw new Error('Failed to create user profile');
       }
 
@@ -92,11 +106,11 @@ export class AuthService {
       };
     } catch (error) {
       this.logger.error(`Registration error: ${error.message}`);
-      
+
       if (error instanceof ConflictException) {
         throw error;
       }
-      
+
       throw new Error('Registration failed. Please try again.');
     }
   }
@@ -105,10 +119,11 @@ export class AuthService {
     this.logger.log(`Attempting to login user: ${loginDto.email}`);
 
     try {
-      const { data: authData, error: authError } = await this.supabaseService.client.auth.signInWithPassword({
-        email: loginDto.email,
-        password: loginDto.password,
-      });
+      const { data: authData, error: authError } =
+        await this.supabaseService.client.auth.signInWithPassword({
+          email: loginDto.email,
+          password: loginDto.password,
+        });
 
       if (authError || !authData.user) {
         this.logger.warn(`Login failed for user: ${loginDto.email}`);
@@ -116,11 +131,12 @@ export class AuthService {
       }
 
       // Get user profile
-      const { data: userData, error: userError } = await this.supabaseService.client
-        .from('users')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
+      const { data: userData, error: userError } =
+        await this.supabaseService.client
+          .from('users')
+          .select('*')
+          .eq('id', authData.user.id)
+          .single();
 
       if (userError || !userData) {
         this.logger.error(`User profile not found: ${authData.user.id}`);
@@ -138,12 +154,14 @@ export class AuthService {
       };
     } catch (error) {
       this.logger.error(`Login error: ${error.message}`);
-      
+
       if (error instanceof UnauthorizedException) {
         throw error;
       }
-      
-      throw new UnauthorizedException('Login failed. Please check your credentials.');
+
+      throw new UnauthorizedException(
+        'Login failed. Please check your credentials.'
+      );
     }
   }
 }

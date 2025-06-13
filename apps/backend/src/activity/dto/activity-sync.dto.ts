@@ -1,4 +1,13 @@
-import { IsString, IsNumber, IsOptional, IsBoolean, IsEnum, IsArray, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsBoolean,
+  IsEnum,
+  IsArray,
+  Min,
+  Max,
+} from 'class-validator';
 
 export enum ActivitySource {
   HEALTHKIT = 'healthkit',
@@ -9,13 +18,13 @@ export enum ActivitySource {
   GARMIN = 'garmin',
   STRAVA = 'strava',
   MANUAL = 'manual',
-  DEVICE_SENSORS = 'device_sensors'
+  DEVICE_SENSORS = 'device_sensors',
 }
 
 export enum SyncFrequency {
   REALTIME = 'realtime',
   HOURLY = 'hourly',
-  DAILY = 'daily'
+  DAILY = 'daily',
 }
 
 export class ActivitySyncDto {

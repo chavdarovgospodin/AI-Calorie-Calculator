@@ -34,7 +34,7 @@ export class HealthController {
   async checkDatabase() {
     try {
       const isConnected = await this.supabaseService.testConnection();
-      
+
       if (!isConnected) {
         return {
           status: 'error',

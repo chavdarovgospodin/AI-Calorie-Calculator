@@ -15,10 +15,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   constructor(
     configService: ConfigService,
-    private supabaseService: SupabaseService,
+    private supabaseService: SupabaseService
   ) {
     const jwtSecret = configService.get<string>('JWT_SECRET');
-    
+
     if (!jwtSecret) {
       throw new Error('JWT_SECRET is required');
     }

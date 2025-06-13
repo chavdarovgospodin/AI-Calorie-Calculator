@@ -1,6 +1,16 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { SupabaseService } from '../database/supabase.service';
-import { ActivitySyncDto, UserActivityPreferencesDto, ManualActivityEntryDto, ActivitySource } from './dto/activity-sync.dto';
+import {
+  ActivitySyncDto,
+  UserActivityPreferencesDto,
+  ManualActivityEntryDto,
+  ActivitySource,
+} from './dto/activity-sync.dto';
 
 @Injectable()
 export class ActivityService {
@@ -10,7 +20,9 @@ export class ActivityService {
 
   // Sync activity data from mobile app
   async syncActivityData(userId: string, activityData: ActivitySyncDto) {
-    this.logger.log(`Syncing activity data for user ${userId} from ${activityData.source}`);
+    this.logger.log(
+      `Syncing activity data for user ${userId} from ${activityData.source}`
+    );
 
     try {
       const date = activityData.date || new Date().toISOString().split('T')[0];
@@ -20,9 +32,9 @@ export class ActivityService {
 
       // Check if activity entry already exists (prevent duplicates)
       const existingEntry = await this.findExistingActivityEntry(
-        userId, 
-        dailyLog.id, 
-        activityData.source, 
+        userId,
+        dailyLog.id,
+        activityData.source,
         activityData.externalId
       );
 
@@ -30,8 +42,14 @@ export class ActivityService {
         this.logger.log(`Updating existing activity entry ${existingEntry.id}`);
         return await this.updateActivityEntry(existingEntry.id, activityData);
       } else {
-        this.logger.log(`Creating new activity entry for ${activityData.source}`);
-        return await this.createActivityEntry(userId, dailyLog.id, activityData);
+        this.logger.log(
+          `Creating new activity entry for ${activityData.source}`
+        );
+        return await this.createActivityEntry(
+          userId,
+          dailyLog.id,
+          activityData
+        );
       }
     } catch (error) {
       this.logger.error(`Failed to sync activity data: ${error.message}`);
@@ -50,7 +68,8 @@ export class ActivityService {
         .eq('user_id', userId)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 = no rows found
         throw error;
       }
 
@@ -67,7 +86,10 @@ export class ActivityService {
   }
 
   // Update user's activity preferences
-  async updateActivityPreferences(userId: string, preferences: UserActivityPreferencesDto) {
+  async updateActivityPreferences(
+    userId: string,
+    preferences: UserActivityPreferencesDto
+  ) {
     this.logger.log(`Updating activity preferences for user ${userId}`);
 
     try {
@@ -86,21 +108,29 @@ export class ActivityService {
       this.logger.log(`Activity preferences updated for user ${userId}`);
       return data;
     } catch (error) {
-      this.logger.error(`Failed to update activity preferences: ${error.message}`);
+      this.logger.error(
+        `Failed to update activity preferences: ${error.message}`
+      );
       throw new BadRequestException('Failed to update activity preferences');
     }
   }
 
   // Manual activity entry
-  async addManualActivity(userId: string, activityEntry: ManualActivityEntryDto) {
-    this.logger.log(`Adding manual activity for user ${userId}: ${activityEntry.activityType}`);
+  async addManualActivity(
+    userId: string,
+    activityEntry: ManualActivityEntryDto
+  ) {
+    this.logger.log(
+      `Adding manual activity for user ${userId}: ${activityEntry.activityType}`
+    );
 
     try {
       const date = activityEntry.date || new Date().toISOString().split('T')[0];
       const dailyLog = await this.getOrCreateDailyLog(userId, date);
 
       // Calculate calories if not provided
-      const caloriesBurned = activityEntry.caloriesBurned || 
+      const caloriesBurned =
+        activityEntry.caloriesBurned ||
         this.calculateCaloriesFromActivity(activityEntry);
 
       const activityData: ActivitySyncDto = {
@@ -111,7 +141,11 @@ export class ActivityService {
         date,
       };
 
-      const result = await this.createActivityEntry(userId, dailyLog.id, activityData);
+      const result = await this.createActivityEntry(
+        userId,
+        dailyLog.id,
+        activityData
+      );
 
       // Add notes if provided
       if (activityEntry.notes) {
@@ -142,10 +176,12 @@ export class ActivityService {
     try {
       const { data: dailyLog } = await this.supabaseService.client
         .from('daily_logs')
-        .select(`
+        .select(
+          `
           *,
           activity_entries(*)
-        `)
+        `
+        )
         .eq('user_id', userId)
         .eq('date', date)
         .single();
@@ -165,20 +201,24 @@ export class ActivityService {
       // Calculate totals
       const activities = dailyLog.activity_entries || [];
       const totalCaloriesBurned = activities.reduce(
-        (sum: number, entry: any) => sum + (entry.calories_burned || 0), 0
+        (sum: number, entry: any) => sum + (entry.calories_burned || 0),
+        0
       );
 
       const totalSteps = activities.reduce(
-        (sum: number, entry: any) => sum + (entry.steps || 0), 0
+        (sum: number, entry: any) => sum + (entry.steps || 0),
+        0
       );
 
       const totalDistance = activities.reduce(
-        (sum: number, entry: any) => sum + (entry.distance || 0), 0
+        (sum: number, entry: any) => sum + (entry.distance || 0),
+        0
       );
 
       // Find most recent activity source
       const latestActivity = activities.sort(
-        (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        (a: any, b: any) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )[0];
 
       return {
@@ -200,16 +240,48 @@ export class ActivityService {
   async getAvailableActivitySources(platform: 'ios' | 'android') {
     const sources = {
       ios: [
-        { source: ActivitySource.HEALTHKIT, name: 'Apple Health', description: 'Integrates with all iOS health apps' },
-        { source: ActivitySource.DEVICE_SENSORS, name: 'iPhone Sensors', description: 'Built-in step counter and motion sensors' },
-        { source: ActivitySource.MANUAL, name: 'Manual Entry', description: 'Manually log your activities' },
+        {
+          source: ActivitySource.HEALTHKIT,
+          name: 'Apple Health',
+          description: 'Integrates with all iOS health apps',
+        },
+        {
+          source: ActivitySource.DEVICE_SENSORS,
+          name: 'iPhone Sensors',
+          description: 'Built-in step counter and motion sensors',
+        },
+        {
+          source: ActivitySource.MANUAL,
+          name: 'Manual Entry',
+          description: 'Manually log your activities',
+        },
       ],
       android: [
-        { source: ActivitySource.GOOGLEFIT, name: 'Google Fit', description: 'Integrates with most Android fitness apps' },
-        { source: ActivitySource.SAMSUNG_HEALTH, name: 'Samsung Health', description: 'Direct Samsung Health integration' },
-        { source: ActivitySource.HUAWEI_HEALTH, name: 'Huawei Health', description: 'Direct Huawei Health integration' },
-        { source: ActivitySource.DEVICE_SENSORS, name: 'Device Sensors', description: 'Built-in step counter and sensors' },
-        { source: ActivitySource.MANUAL, name: 'Manual Entry', description: 'Manually log your activities' },
+        {
+          source: ActivitySource.GOOGLEFIT,
+          name: 'Google Fit',
+          description: 'Integrates with most Android fitness apps',
+        },
+        {
+          source: ActivitySource.SAMSUNG_HEALTH,
+          name: 'Samsung Health',
+          description: 'Direct Samsung Health integration',
+        },
+        {
+          source: ActivitySource.HUAWEI_HEALTH,
+          name: 'Huawei Health',
+          description: 'Direct Huawei Health integration',
+        },
+        {
+          source: ActivitySource.DEVICE_SENSORS,
+          name: 'Device Sensors',
+          description: 'Built-in step counter and sensors',
+        },
+        {
+          source: ActivitySource.MANUAL,
+          name: 'Manual Entry',
+          description: 'Manually log your activities',
+        },
       ],
     };
 
@@ -245,9 +317,9 @@ export class ActivityService {
   }
 
   private async findExistingActivityEntry(
-    userId: string, 
-    dailyLogId: string, 
-    source: ActivitySource, 
+    userId: string,
+    dailyLogId: string,
+    source: ActivitySource,
     externalId?: string
   ) {
     if (!externalId) return null;
@@ -264,7 +336,11 @@ export class ActivityService {
     return data;
   }
 
-  private async createActivityEntry(userId: string, dailyLogId: string, activityData: ActivitySyncDto) {
+  private async createActivityEntry(
+    userId: string,
+    dailyLogId: string,
+    activityData: ActivitySyncDto
+  ) {
     const { data, error } = await this.supabaseService.client
       .from('activity_entries')
       .insert({
@@ -285,7 +361,10 @@ export class ActivityService {
     return data;
   }
 
-  private async updateActivityEntry(entryId: string, activityData: ActivitySyncDto) {
+  private async updateActivityEntry(
+    entryId: string,
+    activityData: ActivitySyncDto
+  ) {
     const { data, error } = await this.supabaseService.client
       .from('activity_entries')
       .update({
@@ -322,7 +401,9 @@ export class ActivityService {
     return data;
   }
 
-  private calculateCaloriesFromActivity(activity: ManualActivityEntryDto): number {
+  private calculateCaloriesFromActivity(
+    activity: ManualActivityEntryDto
+  ): number {
     // Simple calorie calculation based on activity type and intensity
     const baseCaloriesPerMinute = {
       walking: { low: 3, moderate: 4, high: 5 },
@@ -338,7 +419,11 @@ export class ActivityService {
     };
 
     const activityKey = activity.activityType.toLowerCase();
-    const rates = baseCaloriesPerMinute[activityKey] || { low: 3, moderate: 4, high: 5 };
+    const rates = baseCaloriesPerMinute[activityKey] || {
+      low: 3,
+      moderate: 4,
+      high: 5,
+    };
     const caloriesPerMinute = rates[activity.intensity];
 
     return Math.round(activity.duration * caloriesPerMinute);

@@ -9,13 +9,13 @@ export const throttlerConfig: ThrottlerModuleOptions = {
     },
     {
       name: 'auth',
-      ttl: 5 * 60 * 1000, // 5 minutes  
+      ttl: 5 * 60 * 1000, // 5 minutes
       limit: 5, // 5 login attempts per 5 minutes
     },
     {
       name: 'ai',
       ttl: 60 * 1000, // 1 minute
       limit: 10, // 10 AI requests per minute (generous for friends)
-    }
+    },
   ],
 };

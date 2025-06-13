@@ -10,9 +10,11 @@ export class AiService {
 
   constructor(private configService: ConfigService) {
     const apiKey = configService.get<string>('GOOGLE_AI_API_KEY');
-    
+
     if (!apiKey) {
-      this.logger.error('Google AI API key is missing in environment variables');
+      this.logger.error(
+        'Google AI API key is missing in environment variables'
+      );
       throw new Error('GOOGLE_AI_API_KEY is required');
     }
 
@@ -70,9 +72,9 @@ export class AiService {
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
-      
+
       this.logger.debug(`AI Response: ${text}`);
-      
+
       // Extract JSON from response
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
@@ -80,18 +82,22 @@ export class AiService {
       }
 
       const analysis: NutritionAnalysis = JSON.parse(jsonMatch[0]);
-      
+
       // Validate the response structure
       this.validateNutritionAnalysis(analysis);
-      
+
       const processingTime = Date.now() - startTime;
-      this.logger.log(`✅ Food analysis completed: ${analysis.totalCalories} calories (${processingTime}ms)`);
-      
+      this.logger.log(
+        `✅ Food analysis completed: ${analysis.totalCalories} calories (${processingTime}ms)`
+      );
+
       return analysis;
     } catch (error) {
       const processingTime = Date.now() - startTime;
-      this.logger.error(`❌ Text food analysis failed after ${processingTime}ms: ${error.message}`);
-      
+      this.logger.error(
+        `❌ Text food analysis failed after ${processingTime}ms: ${error.message}`
+      );
+
       if (error.message.includes('JSON')) {
         throw new Error('AI returned invalid response format');
       }
@@ -101,14 +107,16 @@ export class AiService {
       if (error.message.includes('quota')) {
         throw new Error('AI service quota exceeded');
       }
-      
+
       throw new Error('Failed to analyze food description');
     }
   }
 
   async analyzeImageFood(imageBase64: string): Promise<NutritionAnalysis> {
     const startTime = Date.now();
-    this.logger.log(`📸 Analyzing food image (${Math.round(imageBase64.length / 1024)}KB)`);
+    this.logger.log(
+      `📸 Analyzing food image (${Math.round(imageBase64.length / 1024)}KB)`
+    );
 
     const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
@@ -158,27 +166,31 @@ export class AiService {
 
       const response = await result.response;
       const text = response.text();
-      
+
       this.logger.debug(`AI Image Response: ${text}`);
-      
+
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No valid JSON found in AI response');
       }
 
       const analysis: NutritionAnalysis = JSON.parse(jsonMatch[0]);
-      
+
       // Validate the response structure
       this.validateNutritionAnalysis(analysis);
-      
+
       const processingTime = Date.now() - startTime;
-      this.logger.log(`✅ Image analysis completed: ${analysis.totalCalories} calories (${processingTime}ms)`);
-      
+      this.logger.log(
+        `✅ Image analysis completed: ${analysis.totalCalories} calories (${processingTime}ms)`
+      );
+
       return analysis;
     } catch (error) {
       const processingTime = Date.now() - startTime;
-      this.logger.error(`❌ Image food analysis failed after ${processingTime}ms: ${error.message}`);
-      
+      this.logger.error(
+        `❌ Image food analysis failed after ${processingTime}ms: ${error.message}`
+      );
+
       if (error.message.includes('JSON')) {
         throw new Error('AI returned invalid response format');
       }
@@ -188,14 +200,20 @@ export class AiService {
       if (error.message.includes('quota')) {
         throw new Error('AI service quota exceeded');
       }
-      
+
       throw new Error('Failed to analyze food image');
     }
   }
 
   private validateNutritionAnalysis(analysis: any): void {
-    const requiredFields = ['totalCalories', 'protein', 'carbs', 'fat', 'foods'];
-    
+    const requiredFields = [
+      'totalCalories',
+      'protein',
+      'carbs',
+      'fat',
+      'foods',
+    ];
+
     for (const field of requiredFields) {
       if (analysis[field] === undefined || analysis[field] === null) {
         throw new Error(`Missing required field: ${field}`);
@@ -217,7 +235,14 @@ export class AiService {
 
     // Validate each food item
     analysis.foods.forEach((food: any, index: number) => {
-      const requiredFoodFields = ['name', 'quantity', 'calories', 'protein', 'carbs', 'fat'];
+      const requiredFoodFields = [
+        'name',
+        'quantity',
+        'calories',
+        'protein',
+        'carbs',
+        'fat',
+      ];
       for (const field of requiredFoodFields) {
         if (food[field] === undefined || food[field] === null) {
           throw new Error(`Missing field ${field} in food item ${index}`);
@@ -231,17 +256,20 @@ export class AiService {
   async testConnection(): Promise<boolean> {
     try {
       this.logger.log('Testing Google AI API connection...');
-      
+
       const testAnalysis = await this.analyzeTextFood('1 ябълка');
-      
+
       if (testAnalysis && testAnalysis.totalCalories > 0) {
         this.logger.log('✅ Google AI API connection test successful');
         return true;
       }
-      
+
       return false;
     } catch (error) {
-      this.logger.error('❌ Google AI API connection test failed:', error.message);
+      this.logger.error(
+        '❌ Google AI API connection test failed:',
+        error.message
+      );
       return false;
     }
   }

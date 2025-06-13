@@ -13,7 +13,9 @@ export class SupabaseService {
 
     if (!supabaseUrl || !supabaseKey) {
       this.logger.error('Supabase configuration missing');
-      this.logger.error('Required: SUPABASE_URL and SUPABASE_SERVICE_KEY in .env file');
+      this.logger.error(
+        'Required: SUPABASE_URL and SUPABASE_SERVICE_KEY in .env file'
+      );
       throw new Error('Supabase URL and Service Key are required');
     }
 
@@ -60,15 +62,23 @@ export class SupabaseService {
 
   async checkTablesExist(): Promise<boolean> {
     try {
-      const requiredTables = ['users', 'daily_logs', 'food_entries', 'activity_entries'];
-      
+      const requiredTables = [
+        'users',
+        'daily_logs',
+        'food_entries',
+        'activity_entries',
+      ];
+
       for (const table of requiredTables) {
         const { error } = await this.supabase
           .from(table)
           .select('*', { count: 'exact', head: true });
 
         if (error) {
-          this.logger.error(`❌ Table '${table}' not accessible:`, error.message);
+          this.logger.error(
+            `❌ Table '${table}' not accessible:`,
+            error.message
+          );
           return false;
         }
       }

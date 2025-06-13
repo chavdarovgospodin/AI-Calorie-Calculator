@@ -8,7 +8,8 @@ import { ActivityService } from 'src/activity/activity.service';
 export class DailyLogsService {
   private readonly logger = new Logger(DailyLogsService.name);
 
-  constructor(private supabaseService: SupabaseService,
+  constructor(
+    private supabaseService: SupabaseService,
     private activityService: ActivityService
   ) {}
 
@@ -19,17 +20,21 @@ export class DailyLogsService {
     try {
       let { data: dailyLog } = await this.supabaseService.client
         .from('daily_logs')
-        .select(`
+        .select(
+          `
           *,
           food_entries(*),
           activity_entries(*)
-        `)
+        `
+        )
         .eq('user_id', userId)
         .eq('date', targetDate)
         .single();
 
       if (!dailyLog) {
-        this.logger.log(`Creating new daily log for user ${userId} on ${targetDate}`);
+        this.logger.log(
+          `Creating new daily log for user ${userId} on ${targetDate}`
+        );
         const { data: newLog, error } = await this.supabaseService.client
           .from('daily_logs')
           .insert({
@@ -38,11 +43,13 @@ export class DailyLogsService {
             total_calories_consumed: 0,
             calories_burned: 0,
           })
-          .select(`
+          .select(
+            `
             *,
             food_entries(*),
             activity_entries(*)
-          `)
+          `
+          )
           .single();
 
         if (error) throw error;
@@ -56,9 +63,14 @@ export class DailyLogsService {
     }
   }
 
-  async getDashboardData(userId: string, date?: string): Promise<DashboardResponseDto> {
+  async getDashboardData(
+    userId: string,
+    date?: string
+  ): Promise<DashboardResponseDto> {
     const targetDate = date || new Date().toISOString().split('T')[0];
-    this.logger.log(`Getting dashboard data for user ${userId} on ${targetDate}`);
+    this.logger.log(
+      `Getting dashboard data for user ${userId} on ${targetDate}`
+    );
 
     try {
       // Get user's daily calorie goal
@@ -76,32 +88,42 @@ export class DailyLogsService {
       const dailyLog = await this.getDailyLog(userId, targetDate);
 
       // Calculate totals from actual food entries
-      const totalCaloriesConsumed = dailyLog.food_entries?.reduce(
-        (sum: number, entry: any) => sum + (entry.calories || 0), 0
-      ) || 0;
+      const totalCaloriesConsumed =
+        dailyLog.food_entries?.reduce(
+          (sum: number, entry: any) => sum + (entry.calories || 0),
+          0
+        ) || 0;
 
-      const totalCaloriesBurned = dailyLog.activity_entries?.reduce(
-        (sum: number, entry: any) => sum + (entry.calories_burned || 0), 0
-      ) || 0;
+      const totalCaloriesBurned =
+        dailyLog.activity_entries?.reduce(
+          (sum: number, entry: any) => sum + (entry.calories_burned || 0),
+          0
+        ) || 0;
 
       // Calculate macros
-      const totalProtein = dailyLog.food_entries?.reduce(
-        (sum: number, entry: any) => sum + (entry.protein || 0), 0
-      ) || 0;
+      const totalProtein =
+        dailyLog.food_entries?.reduce(
+          (sum: number, entry: any) => sum + (entry.protein || 0),
+          0
+        ) || 0;
 
-      const totalCarbs = dailyLog.food_entries?.reduce(
-        (sum: number, entry: any) => sum + (entry.carbs || 0), 0
-      ) || 0;
+      const totalCarbs =
+        dailyLog.food_entries?.reduce(
+          (sum: number, entry: any) => sum + (entry.carbs || 0),
+          0
+        ) || 0;
 
-      const totalFat = dailyLog.food_entries?.reduce(
-        (sum: number, entry: any) => sum + (entry.fat || 0), 0
-      ) || 0;
+      const totalFat =
+        dailyLog.food_entries?.reduce(
+          (sum: number, entry: any) => sum + (entry.fat || 0),
+          0
+        ) || 0;
 
       // Calculate metrics
       const netCalories = totalCaloriesConsumed - totalCaloriesBurned;
       const remainingCalories = user.daily_calorie_goal - netCalories;
       const progressPercentage = Math.min(
-        Math.round((netCalories / user.daily_calorie_goal) * 100), 
+        Math.round((netCalories / user.daily_calorie_goal) * 100),
         100
       );
 
@@ -115,7 +137,9 @@ export class DailyLogsService {
         goalStatus = 'on_target';
       }
 
-      this.logger.log(`Dashboard calculated: ${netCalories}/${user.daily_calorie_goal} calories (${progressPercentage}%)`);
+      this.logger.log(
+        `Dashboard calculated: ${netCalories}/${user.daily_calorie_goal} calories (${progressPercentage}%)`
+      );
 
       return {
         date: targetDate,
@@ -145,17 +169,21 @@ export class DailyLogsService {
     const start = new Date(endDate);
     start.setDate(endDate.getDate() - 6); // 7 days total
 
-    this.logger.log(`Getting weekly logs for user ${userId} from ${start.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
+    this.logger.log(
+      `Getting weekly logs for user ${userId} from ${start.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`
+    );
 
     try {
       const { data: logs, error } = await this.supabaseService.client
         .from('daily_logs')
-        .select(`
+        .select(
+          `
           date,
           total_calories_consumed,
           calories_burned,
           food_entries(calories, protein, carbs, fat)
-        `)
+        `
+        )
         .eq('user_id', userId)
         .gte('date', start.toISOString().split('T')[0])
         .lte('date', endDate.toISOString().split('T')[0])
@@ -169,18 +197,22 @@ export class DailyLogsService {
         const currentDate = new Date(start);
         currentDate.setDate(start.getDate() + i);
         const dateStr = currentDate.toISOString().split('T')[0];
-        
-        const existingLog = logs?.find(log => log.date === dateStr);
-        
+
+        const existingLog = logs?.find((log) => log.date === dateStr);
+
         if (existingLog) {
           // Calculate totals from food entries
-          const totalCalories = existingLog.food_entries?.reduce(
-            (sum: number, entry: any) => sum + (entry.calories || 0), 0
-          ) || 0;
-          
-          const totalProtein = existingLog.food_entries?.reduce(
-            (sum: number, entry: any) => sum + (entry.protein || 0), 0
-          ) || 0;
+          const totalCalories =
+            existingLog.food_entries?.reduce(
+              (sum: number, entry: any) => sum + (entry.calories || 0),
+              0
+            ) || 0;
+
+          const totalProtein =
+            existingLog.food_entries?.reduce(
+              (sum: number, entry: any) => sum + (entry.protein || 0),
+              0
+            ) || 0;
 
           weeklyData.push({
             date: dateStr,
@@ -189,9 +221,17 @@ export class DailyLogsService {
             netCalories: totalCalories - (existingLog.calories_burned || 0),
             macros: {
               protein: totalProtein,
-              carbs: existingLog.food_entries?.reduce((sum: number, entry: any) => sum + (entry.carbs || 0), 0) || 0,
-              fat: existingLog.food_entries?.reduce((sum: number, entry: any) => sum + (entry.fat || 0), 0) || 0,
-            }
+              carbs:
+                existingLog.food_entries?.reduce(
+                  (sum: number, entry: any) => sum + (entry.carbs || 0),
+                  0
+                ) || 0,
+              fat:
+                existingLog.food_entries?.reduce(
+                  (sum: number, entry: any) => sum + (entry.fat || 0),
+                  0
+                ) || 0,
+            },
           });
         } else {
           weeklyData.push({
@@ -199,7 +239,7 @@ export class DailyLogsService {
             totalCaloriesConsumed: 0,
             totalCaloriesBurned: 0,
             netCalories: 0,
-            macros: { protein: 0, carbs: 0, fat: 0 }
+            macros: { protein: 0, carbs: 0, fat: 0 },
           });
         }
       }
@@ -216,21 +256,27 @@ export class DailyLogsService {
     const now = new Date();
     const targetYear = year || now.getFullYear();
     const targetMonth = month || now.getMonth() + 1;
-    
-    const startDate = `${targetYear}-${targetMonth.toString().padStart(2, '0')}-01`;
-    const endDate = new Date(targetYear, targetMonth, 0).toISOString().split('T')[0];
 
-    this.logger.log(`Getting monthly stats for user ${userId} for ${targetYear}-${targetMonth}`);
+    const startDate = `${targetYear}-${targetMonth.toString().padStart(2, '0')}-01`;
+    const endDate = new Date(targetYear, targetMonth, 0)
+      .toISOString()
+      .split('T')[0];
+
+    this.logger.log(
+      `Getting monthly stats for user ${userId} for ${targetYear}-${targetMonth}`
+    );
 
     try {
       const { data: logs, error } = await this.supabaseService.client
         .from('daily_logs')
-        .select(`
+        .select(
+          `
           date,
           total_calories_consumed,
           calories_burned,
           food_entries(calories)
-        `)
+        `
+        )
         .eq('user_id', userId)
         .gte('date', startDate)
         .lte('date', endDate);
@@ -238,13 +284,20 @@ export class DailyLogsService {
       if (error) throw error;
 
       const totalDays = logs?.length || 0;
-      const totalCaloriesConsumed = logs?.reduce((sum, log) => {
-        const dayCalories = log.food_entries?.reduce((daySum: number, entry: any) => daySum + (entry.calories || 0), 0) || 0;
-        return sum + dayCalories;
-      }, 0) || 0;
+      const totalCaloriesConsumed =
+        logs?.reduce((sum, log) => {
+          const dayCalories =
+            log.food_entries?.reduce(
+              (daySum: number, entry: any) => daySum + (entry.calories || 0),
+              0
+            ) || 0;
+          return sum + dayCalories;
+        }, 0) || 0;
 
-      const totalCaloriesBurned = logs?.reduce((sum, log) => sum + (log.calories_burned || 0), 0) || 0;
-      const averageDaily = totalDays > 0 ? Math.round(totalCaloriesConsumed / totalDays) : 0;
+      const totalCaloriesBurned =
+        logs?.reduce((sum, log) => sum + (log.calories_burned || 0), 0) || 0;
+      const averageDaily =
+        totalDays > 0 ? Math.round(totalCaloriesConsumed / totalDays) : 0;
 
       return {
         year: targetYear,
@@ -288,35 +341,43 @@ export class DailyLogsService {
   }
 
   async getEnhancedDashboardData(userId: string, date?: string) {
-  const targetDate = date || new Date().toISOString().split('T')[0];
-  
-  try {
-    // Get existing dashboard data
-    const dashboardData = await this.getDashboardData(userId, targetDate);
-    
-    // Get activity summary
-    const activitySummary = await this.activityService.getActivitySummary(userId, targetDate);
-    
-    // Get user's activity goal
-    const activityPreferences = await this.activityService.getUserActivityPreferences(userId);
-    
-    return {
-      ...dashboardData,
-      activityData: {
-        totalCaloriesBurned: activitySummary.totalCaloriesBurned,
-        activityGoal: activityPreferences.activity_goal || 600,
-        totalSteps: activitySummary.totalSteps,
-        totalDistance: activitySummary.totalDistance,
-        source: activitySummary.source,
-        lastSync: activitySummary.lastSync,
-        activities: activitySummary.activities,
-      },
-      calorieDifference: dashboardData.totalCaloriesConsumed - activitySummary.totalCaloriesBurned,
-      isActiveDay: activitySummary.totalCaloriesBurned >= (activityPreferences.activity_goal || 600) * 0.8,
-    };
-  } catch (error) {
-    this.logger.error(`Failed to get enhanced dashboard: ${error.message}`);
-    throw error;
+    const targetDate = date || new Date().toISOString().split('T')[0];
+
+    try {
+      // Get existing dashboard data
+      const dashboardData = await this.getDashboardData(userId, targetDate);
+
+      // Get activity summary
+      const activitySummary = await this.activityService.getActivitySummary(
+        userId,
+        targetDate
+      );
+
+      // Get user's activity goal
+      const activityPreferences =
+        await this.activityService.getUserActivityPreferences(userId);
+
+      return {
+        ...dashboardData,
+        activityData: {
+          totalCaloriesBurned: activitySummary.totalCaloriesBurned,
+          activityGoal: activityPreferences.activity_goal || 600,
+          totalSteps: activitySummary.totalSteps,
+          totalDistance: activitySummary.totalDistance,
+          source: activitySummary.source,
+          lastSync: activitySummary.lastSync,
+          activities: activitySummary.activities,
+        },
+        calorieDifference:
+          dashboardData.totalCaloriesConsumed -
+          activitySummary.totalCaloriesBurned,
+        isActiveDay:
+          activitySummary.totalCaloriesBurned >=
+          (activityPreferences.activity_goal || 600) * 0.8,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get enhanced dashboard: ${error.message}`);
+      throw error;
+    }
   }
-}
 }

@@ -1,4 +1,3 @@
-
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { SupabaseService } from '../database/supabase.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -34,11 +33,11 @@ export class UsersService {
       return data;
     } catch (error) {
       this.logger.error(`Failed to get user profile: ${error.message}`);
-      
+
       if (error instanceof NotFoundException) {
         throw error;
       }
-      
+
       throw new Error('Failed to retrieve user profile');
     }
   }
@@ -48,21 +47,27 @@ export class UsersService {
 
     try {
       // If weight or other factors change, recalculate daily calorie goal
-      let updatedData = { ...updateData } as User ;
+      let updatedData = { ...updateData } as User;
 
-      if (updateData.age || updateData.gender || updateData.height || 
-          updateData.weight || updateData.goal || updateData.activity_level) {
-        
+      if (
+        updateData.age ||
+        updateData.gender ||
+        updateData.height ||
+        updateData.weight ||
+        updateData.goal ||
+        updateData.activity_level
+      ) {
         // Get current user data to fill in missing values for calculation
         const currentUser = await this.getUserProfile(userId);
-        
+
         const calculationData = {
           age: updateData.age || currentUser.age,
           gender: updateData.gender || currentUser.gender,
           height: updateData.height || currentUser.height,
           weight: updateData.weight || currentUser.weight,
           goal: updateData.goal || currentUser.goal,
-          activity_level: updateData.activity_level || currentUser.activity_level,
+          activity_level:
+            updateData.activity_level || currentUser.activity_level,
         };
 
         const newCalorieGoal = calculateDailyCalories(
@@ -71,7 +76,7 @@ export class UsersService {
           calculationData.height,
           calculationData.weight,
           calculationData.goal,
-          calculationData.activity_level,
+          calculationData.activity_level
         );
 
         updatedData.daily_calorie_goal = newCalorieGoal;
@@ -94,11 +99,11 @@ export class UsersService {
       return data;
     } catch (error) {
       this.logger.error(`Failed to update profile: ${error.message}`);
-      
+
       if (error instanceof NotFoundException) {
         throw error;
       }
-      
+
       throw new Error('Failed to update user profile');
     }
   }

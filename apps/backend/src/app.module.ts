@@ -24,7 +24,7 @@ import { ActivityModule } from './activity/activity.module';
         {
           ttl: 60 * 1000, // 1 minute
           limit: 100, // default limit
-        }
+        },
       ],
     }),
     DatabaseModule,
@@ -44,5 +44,4 @@ import { ActivityModule } from './activity/activity.module';
     },
   ],
 })
-
 export class AppModule {}
