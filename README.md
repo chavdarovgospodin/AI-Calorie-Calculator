@@ -1,4 +1,4 @@
-# 🍎 Calorie Tracker
+# 🍎 Calorie Tracker/Calculator
 
 AI-powered calorie tracking application with image recognition and nutritional
 analysis.
@@ -94,79 +94,33 @@ npm run ios         # iOS simulator
 npm run android     # Android emulator
 ```
 
-## 📱 API Endpoints
+## Environment Variables
 
-### Authentication
-
-- `POST /auth/register` - User registration
-- `POST /auth/login` - User login
-
-### Food Analysis
-
-- `POST /food/analyze/text` - Analyze food from text
-- `POST /food/analyze/image` - Analyze food from image
-- `GET /food/entries` - Get user's food entries
-
-### Dashboard
-
-- `GET /daily-logs/dashboard` - Get daily dashboard data
-- `GET /daily-logs/weekly` - Get weekly logs
-
-## 🌍 Environment Variables
-
-```env
-# Supabase
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_KEY=your_supabase_service_key
-
-# JWT
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRES_IN=7d
-
-# Google AI
-GOOGLE_AI_API_KEY=your_google_ai_key
-
-# App
-NODE_ENV=development
-PORT=3000
-```
-
-## 🐳 Docker
+Required variables in `.env`:
 
 ```bash
-# Development
-docker-compose -f docker-compose.dev.yml up
+# Supabase Configuration (REQUIRED)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_KEY=your_service_key
 
-# Production
-docker-compose up -d
+# JWT Configuration (REQUIRED)
+JWT_SECRET=your_secure_secret_32_chars_min
+JWT_EXPIRES_IN=7d
+
+# Google AI (REQUIRED)
+GOOGLE_AI_API_KEY=your_google_ai_key
+
+# Application
+NODE_ENV=development
+PORT=3000
+
+# Security Settings
+THROTTLE_TTL=60000
+THROTTLE_LIMIT=100
+HELMET_ENABLED=true
+
+# Optional
+API_BASE_URL=http://localhost:3000
+CORS_ORIGINS=http://localhost:19006,http://localhost:3000
 ```
-
-## 📊 Database Schema
-
-The app uses Supabase with the following main tables:
-
-- `users` - User profiles and settings
-- `daily_logs` - Daily calorie and activity logs
-- `food_entries` - Individual food entries with nutrition data
-- `activity_entries` - Physical activity logs
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
-for details.
-
-## 🔗 Links
-
-- [Backend Documentation](./apps/backend/README.md)
-- [Mobile App Documentation](./apps/mobile/README.md)
-- [API Documentation](./docs/API.md)
-- [Deployment Guide](./docs/DEPLOYMENT.md)

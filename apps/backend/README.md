@@ -5,30 +5,24 @@
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Calorie AI Tracker/Calculator NestJS backend API with TypeScript, Supabase, and Google AI integration
 
 ## Project setup
 
 ```bash
 $ npm install
+```
+
+## Environment setup
+
+```bash
+# Copy environment example
+$ cp .env.example .env
+
+# Fill in your API keys and database URLs
+# See .env.example for all required variables
 ```
 
 ## Compile and run the project
@@ -37,8 +31,11 @@ $ npm install
 # development
 $ npm run start
 
-# watch mode
+# watch mode (recommended for development)
 $ npm run start:dev
+
+# debug mode
+$ npm run start:debug
 
 # production mode
 $ npm run start:prod
@@ -50,6 +47,9 @@ $ npm run start:prod
 # unit tests
 $ npm run test
 
+# watch mode
+$ npm run test:watch
+
 # e2e tests
 $ npm run test:e2e
 
@@ -57,60 +57,185 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are
-some key steps you can take to ensure it runs as efficiently as possible. Check
-out the [deployment documentation](https://docs.nestjs.com/deployment) for more
-information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application,
-check out [Mau](https://mau.nestjs.com), our official platform for deploying
-NestJS applications on AWS. Mau makes deployment straightforward and fast,
-requiring just a few simple steps:
+## Code quality
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Run ESLint
+$ npm run lint
+
+# Fix ESLint issues
+$ npm run lint:fix
+
+# Type checking
+$ npm run type-check
+
+# Format code with Prettier
+$ npm run format
+
+# Check formatting
+$ npm run format:check
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to
-focus on building features rather than managing infrastructure.
+## Health check
 
-## Resources
+```bash
+# Check if server is running
+$ npm run health
 
-Check out a few resources that may come in handy when working with NestJS:
+# Or visit: http://localhost:3000/api/health
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about
-  the framework.
-- For questions and support, please visit our
-  [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video
-  [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of
-  [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in
-  real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official
-  [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on
-  [X](https://x.com/nestframework) and
-  [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official
-  [Jobs board](https://jobs.nestjs.com).
+## Features
 
-## Support
+- 🤖 **AI Food Analysis** - Google Gemini integration for food recognition
+- 🔐 **JWT Authentication** - Secure user authentication and authorization
+- 📊 **Nutrition Tracking** - Comprehensive calorie and macro tracking
+- 🏥 **Health Monitoring** - Built-in health checks and monitoring
+- 🛡️ **Security** - Helmet, CORS, rate limiting, and validation
+- 📱 **Mobile-Ready** - Optimized for React Native mobile app
+- 🚀 **Performance** - Efficient caching and optimized queries
+- 📈 **Scalable** - Modular architecture with proper separation
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors
-and support by the amazing backers. If you'd like to join them, please
-[read more here](https://docs.nestjs.com/support).
+## Tech Stack
 
-## Stay in touch
+- **Framework**: NestJS (Node.js)
+- **Language**: TypeScript
+- **Database**: Supabase (PostgreSQL)
+- **AI Service**: Google Generative AI (Gemini)
+- **Authentication**: JWT + Supabase Auth
+- **Validation**: class-validator, class-transformer
+- **Security**: Helmet, CORS, Rate Limiting
+- **Testing**: Jest, Supertest
+- **Documentation**: Swagger/OpenAPI
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Folder Structure
 
-## License
+```
+src/
+├── ai/                 # AI service integration
+│   ├── interfaces/     # AI response interfaces
+│   ├── validation/     # AI input validation
+│   └── ai.service.ts   # Google AI service
+├── auth/              # Authentication module
+│   ├── dto/           # Data transfer objects
+│   ├── guards/        # Auth guards
+│   └── strategies/    # Passport strategies
+├── common/            # Shared utilities
+│   ├── decorators/    # Custom decorators
+│   ├── filters/       # Exception filters
+│   ├── guards/        # Global guards
+│   ├── interceptors/  # Response interceptors
+│   └── pipes/         # Validation pipes
+├── config/            # Configuration management
+├── database/          # Database services
+│   └── supabase.service.ts
+├── food/              # Food tracking module
+│   ├── dto/           # Food DTOs
+│   └── food.service.ts
+├── daily-logs/        # Daily logging module
+├── activity/          # Activity tracking
+├── users/             # User management
+└── main.ts            # Application entry point
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## API Endpoints
+
+### Authentication
+
+```
+POST   /api/auth/register     # User registration
+POST   /api/auth/login        # User login
+POST   /api/auth/refresh      # Refresh JWT token
+POST   /api/auth/logout       # User logout
+```
+
+### Food Analysis
+
+```
+POST   /api/food/analyze/text   # Analyze food from text
+POST   /api/food/analyze/image  # Analyze food from image
+GET    /api/food/entries        # Get user's food entries
+POST   /api/food/entries        # Add food entry
+PUT    /api/food/entries/:id    # Update food entry
+DELETE /api/food/entries/:id    # Delete food entry
+```
+
+### Daily Logs
+
+```
+GET    /api/daily-logs/dashboard    # Get daily dashboard
+GET    /api/daily-logs/weekly       # Get weekly summary
+GET    /api/daily-logs/:date        # Get specific date log
+POST   /api/daily-logs              # Create/update daily log
+```
+
+### User Profile
+
+```
+GET    /api/users/profile           # Get user profile
+PUT    /api/users/profile           # Update user profile
+GET    /api/users/goals             # Get calorie goals
+PUT    /api/users/goals             # Update calorie goals
+```
+
+### Health & Monitoring
+
+```
+GET    /api/health                  # Health check endpoint
+GET    /api/health/detailed         # Detailed health status
+```
+
+## Database Schema
+
+Main Supabase tables:
+
+```sql
+-- Users table
+users (
+  id: uuid PRIMARY KEY,
+  email: varchar UNIQUE,
+  created_at: timestamp,
+  updated_at: timestamp
+)
+
+-- Daily logs
+daily_logs (
+  id: uuid PRIMARY KEY,
+  user_id: uuid REFERENCES users(id),
+  date: date,
+  total_calories: integer,
+  target_calories: integer,
+  created_at: timestamp
+)
+
+-- Food entries
+food_entries (
+  id: uuid PRIMARY KEY,
+  daily_log_id: uuid REFERENCES daily_logs(id),
+  food_name: varchar,
+  calories: integer,
+  protein: decimal,
+  carbs: decimal,
+  fat: decimal,
+  quantity: decimal,
+  unit: varchar
+)
+
+-- Activity entries
+activity_entries (
+  id: uuid PRIMARY KEY,
+  daily_log_id: uuid REFERENCES daily_logs(id),
+  activity_type: varchar,
+  duration_minutes: integer,
+  calories_burned: integer
+)
+```
+
+## Security Features
+
+- **Authentication**: JWT with refresh tokens
+- **Authorization**: Role-based access control
+- **Validation**: Input sanitization and validation
+- **Rate Limiting**: Prevent abuse and DDoS
+- **CORS**: Configured for mobile app origins
+- **Headers**: Security headers with Helmet
