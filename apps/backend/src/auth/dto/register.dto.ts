@@ -8,11 +8,7 @@ import {
   Max,
   MinLength,
 } from 'class-validator';
-import {
-  ActivityLevel,
-  Gender,
-  Goal,
-} from 'src/common/interfaces/user.interface';
+import { ActivityLevel, Gender, Goal } from 'src/common/interfaces/user.interface';
 
 export class RegisterDto {
   @IsEmail({}, { message: 'Please provide a valid email address' })

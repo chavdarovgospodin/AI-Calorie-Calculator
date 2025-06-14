@@ -17,7 +17,6 @@ const HomeScreen = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
   useEffect(() => {
     loadDashboardData();
   }, []);
@@ -40,38 +39,31 @@ const HomeScreen = () => {
       setRefreshing(false);
     }
   };
-
   const onRefresh = () => {
     setRefreshing(true);
     loadDashboardData();
   };
-
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Logout', 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await logout();
-              Toast.show({
-                type: 'success',
-                text1: 'Logged out',
-                text2: 'See you soon!',
-              });
-            } catch (error) {
-              console.error('Logout error:', error);
-            }
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await logout();
+            Toast.show({
+              type: 'success',
+              text1: 'Logged out',
+              text2: 'See you soon!',
+            });
+          } catch (error) {
+            console.error('Logout error:', error);
           }
         },
-      ]
-    );
+      },
+    ]);
   };
-
   const testFoodAnalysis = async () => {
     try {
       Toast.show({
@@ -81,7 +73,6 @@ const HomeScreen = () => {
       });
 
       const result = await foodApi.analyzeText('1 ябълка');
-      
       Toast.show({
         type: 'success',
         text1: 'Analysis Complete!',
@@ -89,7 +80,6 @@ const HomeScreen = () => {
       });
 
       loadDashboardData();
-      
     } catch (error) {
       console.error('❌ Food analysis failed:', error);
       Toast.show({
@@ -99,7 +89,6 @@ const HomeScreen = () => {
       });
     }
   };
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -107,13 +96,10 @@ const HomeScreen = () => {
       </View>
     );
   }
-
   return (
     <ScrollView
       style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       <View style={styles.header}>
         <View>
@@ -127,23 +113,19 @@ const HomeScreen = () => {
 
       <View style={styles.statsCard}>
         <Text style={styles.sectionTitle}>Today's Summary</Text>
-        
+
         {dashboardData ? (
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {dashboardData.netCalories || 0}
-              </Text>
+              <Text style={styles.statNumber}>{dashboardData.netCalories || 0}</Text>
               <Text style={styles.statLabel}>Net Calories</Text>
             </View>
-            
+
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {dashboardData.dailyCalorieGoal || 0}
-              </Text>
+              <Text style={styles.statNumber}>{dashboardData.dailyCalorieGoal || 0}</Text>
               <Text style={styles.statLabel}>Daily Goal</Text>
             </View>
-            
+
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>
                 {dashboardData.remainingCalories || 0}
@@ -158,11 +140,11 @@ const HomeScreen = () => {
         {dashboardData && (
           <View style={styles.progressContainer}>
             <View style={styles.progressBar}>
-              <View 
+              <View
                 style={[
-                  styles.progressFill, 
-                  { width: `${Math.min(dashboardData.progressPercentage, 100)}%` }
-                ]} 
+                  styles.progressFill,
+                  { width: `${Math.min(dashboardData.progressPercentage, 100)}%` },
+                ]}
               />
             </View>
             <Text style={styles.progressText}>
@@ -174,17 +156,17 @@ const HomeScreen = () => {
 
       <View style={styles.actionsCard}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
-        
+
         <TouchableOpacity style={styles.actionButton} onPress={testFoodAnalysis}>
           <Text style={styles.actionIcon}>🧪</Text>
           <Text style={styles.actionText}>Test Food Analysis</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.actionButton}>
           <Text style={styles.actionIcon}>📸</Text>
           <Text style={styles.actionText}>Analyze Food Photo</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.actionButton}>
           <Text style={styles.actionIcon}>📝</Text>
           <Text style={styles.actionText}>Add Food Manually</Text>
@@ -197,6 +179,5 @@ const HomeScreen = () => {
       </View>
     </ScrollView>
   );
-}
-
+};
 export default HomeScreen;

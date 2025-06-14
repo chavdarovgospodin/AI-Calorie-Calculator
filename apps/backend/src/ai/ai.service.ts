@@ -1,6 +1,7 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+
 import { NutritionAnalysis } from './interfaces/nutrition-analysis.interface';
 import { AiValidationService } from './validation/ai-validation.service';
 
@@ -14,14 +15,10 @@ export class AiService {
     private aiValidationService: AiValidationService
   ) {
     const apiKey = configService.get<string>('GOOGLE_AI_API_KEY');
-
     if (!apiKey) {
-      this.logger.error(
-        'Google AI API key is missing in environment variables'
-      );
+      this.logger.error('Google AI API key is missing in environment variables');
       throw new Error('GOOGLE_AI_API_KEY is required');
     }
-
     try {
       this.genAI = new GoogleGenerativeAI(apiKey);
       this.logger.log('✅ Google AI service initialized successfully');
@@ -35,14 +32,11 @@ export class AiService {
     const startTime = Date.now();
     this.logger.log(`🔍 Analyzing food text: "${description}"`);
 
-    const validation =
-      await this.aiValidationService.validateTextFood(description);
-
+    const validation = await this.aiValidationService.validateTextFood(description);
     if (!validation.isValid) {
       this.logger.warn(`❌ Text validation failed: ${validation.reason}`);
       throw this.aiValidationService.createValidationError(validation);
     }
-
     if (validation.confidence < 0.7) {
       this.logger.warn(
         `⚠️ Low confidence text (${Math.round(validation.confidence * 100)}%): ${description}`
@@ -52,9 +46,7 @@ export class AiService {
         `✅ Text validation passed (${Math.round(validation.confidence * 100)}% confidence)`
       );
     }
-
     const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
     const prompt = `
     Анализирай следното описание на храна и дай детайлна информация за хранителните стойности.
     Върни САМО JSON обект с точно тази структура (без markdown, без допълнителен текст):
@@ -89,34 +81,27 @@ export class AiService {
     - Бъди максимално точен с хранителните стойности
     - Ако има няколко храни, анализирай всяка поотделно
     `;
-
     try {
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
-
       this.logger.debug(`AI Response: ${text}`);
 
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No valid JSON found in AI response');
       }
-
       const analysis: NutritionAnalysis = JSON.parse(jsonMatch[0]);
-
       this.validateNutritionAnalysis(analysis);
 
       const processingTime = Date.now() - startTime;
       this.logger.log(
         `✅ Food analysis completed: ${analysis.totalCalories} calories (${processingTime}ms)`
       );
-
       return analysis;
     } catch (error) {
       const processingTime = Date.now() - startTime;
-      this.logger.error(
-        `❌ Text food analysis failed after ${processingTime}ms: ${error.message}`
-      );
+      this.logger.error(`❌ Text food analysis failed after ${processingTime}ms: ${error.message}`);
 
       if (error.message.includes('JSON')) {
         throw new Error('AI returned invalid response format');
@@ -127,37 +112,27 @@ export class AiService {
       if (error.message.includes('quota')) {
         throw new Error('AI service quota exceeded');
       }
-
       throw new Error('Failed to analyze food description');
     }
   }
 
   async analyzeImageFood(imageBase64: string): Promise<NutritionAnalysis> {
     const startTime = Date.now();
-    this.logger.log(
-      `📸 Analyzing food image (${Math.round(imageBase64.length / 1024)}KB)`
-    );
+    this.logger.log(`📸 Analyzing food image (${Math.round(imageBase64.length / 1024)}KB)`);
 
-    const validation =
-      await this.aiValidationService.validateImageFood(imageBase64);
-
+    const validation = await this.aiValidationService.validateImageFood(imageBase64);
     if (!validation.isValid) {
       this.logger.warn(`❌ Image validation failed: ${validation.reason}`);
       throw this.aiValidationService.createValidationError(validation);
     }
-
     if (validation.confidence < 0.6) {
-      this.logger.warn(
-        `⚠️ Low confidence image (${Math.round(validation.confidence * 100)}%)`
-      );
+      this.logger.warn(`⚠️ Low confidence image (${Math.round(validation.confidence * 100)}%)`);
     } else {
       this.logger.log(
         `✅ Image validation passed (${Math.round(validation.confidence * 100)}% confidence)`
       );
     }
-
     const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
     const prompt = `
     Анализирай тази снимка на храна и дай детайлна информация за хранителните стойности.
     Върни САМО JSON обект с точно тази структура (без markdown, без допълнителен текст):
@@ -190,7 +165,6 @@ export class AiService {
     - Фибри в грамове, натрий в милиграми
     - Ако не можеш да разпознаеш храната, каж това честно
     `;
-
     try {
       const result = await model.generateContent([
         prompt,
@@ -201,26 +175,21 @@ export class AiService {
           },
         },
       ]);
-
       const response = await result.response;
       const text = response.text();
-
       this.logger.debug(`AI Image Response: ${text}`);
 
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No valid JSON found in AI response');
       }
-
       const analysis: NutritionAnalysis = JSON.parse(jsonMatch[0]);
-
       this.validateNutritionAnalysis(analysis);
 
       const processingTime = Date.now() - startTime;
       this.logger.log(
         `✅ Image analysis completed: ${analysis.totalCalories} calories (${processingTime}ms)`
       );
-
       return analysis;
     } catch (error) {
       const processingTime = Date.now() - startTime;
@@ -237,46 +206,28 @@ export class AiService {
       if (error.message.includes('quota')) {
         throw new Error('AI service quota exceeded');
       }
-
       throw new Error('Failed to analyze food image');
     }
   }
 
   private validateNutritionAnalysis(analysis: any): void {
-    const requiredFields = [
-      'totalCalories',
-      'protein',
-      'carbs',
-      'fat',
-      'foods',
-    ];
-
+    const requiredFields = ['totalCalories', 'protein', 'carbs', 'fat', 'foods'];
     for (const field of requiredFields) {
       if (analysis[field] === undefined || analysis[field] === null) {
         throw new Error(`Missing required field: ${field}`);
       }
     }
-
     const numericFields = ['totalCalories', 'protein', 'carbs', 'fat'];
     for (const field of numericFields) {
       if (typeof analysis[field] !== 'number' || analysis[field] < 0) {
         throw new Error(`Invalid ${field}: must be a positive number`);
       }
     }
-
     if (!Array.isArray(analysis.foods)) {
       throw new Error('Foods must be an array');
     }
-
     analysis.foods.forEach((food: any, index: number) => {
-      const requiredFoodFields = [
-        'name',
-        'quantity',
-        'calories',
-        'protein',
-        'carbs',
-        'fat',
-      ];
+      const requiredFoodFields = ['name', 'quantity', 'calories', 'protein', 'carbs', 'fat'];
       for (const field of requiredFoodFields) {
         if (food[field] === undefined || food[field] === null) {
           throw new Error(`Missing field ${field} in food item ${index}`);
@@ -292,18 +243,13 @@ export class AiService {
       this.logger.log('Testing Google AI API connection...');
 
       const testAnalysis = await this.analyzeTextFood('1 ябълка');
-
       if (testAnalysis && testAnalysis.totalCalories > 0) {
         this.logger.log('✅ Google AI API connection test successful');
         return true;
       }
-
       return false;
     } catch (error) {
-      this.logger.error(
-        '❌ Google AI API connection test failed:',
-        error.message
-      );
+      this.logger.error('❌ Google AI API connection test failed:', error.message);
       return false;
     }
   }

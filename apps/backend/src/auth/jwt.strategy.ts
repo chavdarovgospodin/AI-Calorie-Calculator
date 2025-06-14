@@ -1,7 +1,7 @@
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
 import { SupabaseService } from 'src/database/supabase.service';
 
 export interface JwtPayload {
@@ -18,11 +18,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private supabaseService: SupabaseService
   ) {
     const jwtSecret = configService.get<string>('JWT_SECRET');
-
     if (!jwtSecret) {
       throw new Error('JWT_SECRET is required');
     }
-
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -39,12 +37,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         .select('*')
         .eq('id', payload.sub)
         .single();
-
       if (error || !user) {
         this.logger.warn(`User not found for JWT payload: ${payload.sub}`);
         throw new UnauthorizedException('User not found');
       }
-
       this.logger.debug(`JWT validation successful for user: ${user.email}`);
       return user;
     } catch (error) {

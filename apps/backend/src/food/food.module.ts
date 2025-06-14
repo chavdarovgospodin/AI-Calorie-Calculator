@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+
+import { AiModule } from '../ai/ai.module';
+import { DatabaseModule } from '../database/database.module';
+
 import { FoodController } from './food.controller';
 import { FoodService } from './food.service';
-import { DatabaseModule } from '../database/database.module';
-import { AiModule } from '../ai/ai.module';
 
 @Module({
   imports: [DatabaseModule, AiModule],

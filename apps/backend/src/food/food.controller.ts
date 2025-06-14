@@ -14,10 +14,11 @@ import {
   Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { FoodService } from './food.service';
-import { AnalyzeFoodTextDto } from './dto/analyze-food.dto';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth-guard';
 import { Throttle } from '@nestjs/throttler';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth-guard';
+
+import { AnalyzeFoodTextDto } from './dto/analyze-food.dto';
+import { FoodService } from './food.service';
 
 @Controller('food')
 @UseGuards(JwtAuthGuard)
@@ -28,17 +29,11 @@ export class FoodController {
 
   @Post('analyze/text')
   @Throttle({ default: { limit: 8, ttl: 60000 } }) // 8 per minute for text
-  async analyzeTextFood(
-    @Request() req,
-    @Body() analyzeDto: AnalyzeFoodTextDto
-  ) {
+  async analyzeTextFood(@Request() req, @Body() analyzeDto: AnalyzeFoodTextDto) {
     this.logger.log(`Text analysis request from user: ${req.user.email}`);
 
     try {
-      return await this.foodService.analyzeTextFood(
-        req.user.id,
-        analyzeDto.description
-      );
+      return await this.foodService.analyzeTextFood(req.user.id, analyzeDto.description);
     } catch (error) {
       this.logger.error(`Text analysis failed: ${error.message}`);
       throw error;
@@ -48,30 +43,22 @@ export class FoodController {
   @Post('analyze/image')
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 per minute for images
   @UseInterceptors(FileInterceptor('image'))
-  async analyzeImageFood(
-    @Request() req,
-    @UploadedFile() file: Express.Multer.File
-  ) {
+  async analyzeImageFood(@Request() req, @UploadedFile() file: Express.Multer.File) {
     this.logger.log(`Image analysis request from user: ${req.user.email}`);
 
     if (!file) {
       throw new BadRequestException('No image file provided');
     }
-
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.mimetype)) {
-      throw new BadRequestException(
-        'Invalid file type. Please upload JPEG, PNG or WebP image'
-      );
+      throw new BadRequestException('Invalid file type. Please upload JPEG, PNG or WebP image');
     }
-
     // Validate file size (max 10MB)
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       throw new BadRequestException('File too large. Maximum size is 10MB');
     }
-
     try {
       const imageBase64 = file.buffer.toString('base64');
       return await this.foodService.analyzeImageFood(req.user.id, imageBase64);
@@ -83,9 +70,7 @@ export class FoodController {
 
   @Get('entries')
   async getFoodEntries(@Request() req, @Query('date') date?: string) {
-    this.logger.log(
-      `Getting food entries for user: ${req.user.email}, date: ${date || 'today'}`
-    );
+    this.logger.log(`Getting food entries for user: ${req.user.email}, date: ${date || 'today'}`);
 
     try {
       return await this.foodService.getUserFoodEntries(req.user.id, date);
@@ -97,9 +82,7 @@ export class FoodController {
 
   @Delete('entries/:id')
   async deleteFoodEntry(@Request() req, @Param('id') entryId: string) {
-    this.logger.log(
-      `Deleting food entry ${entryId} for user: ${req.user.email}`
-    );
+    this.logger.log(`Deleting food entry ${entryId} for user: ${req.user.email}`);
 
     try {
       return await this.foodService.deleteFoodEntry(req.user.id, entryId);
@@ -111,10 +94,7 @@ export class FoodController {
 
   @Get('stats')
   async getFoodStats(@Request() req, @Query('days') days: string = '7') {
-    this.logger.log(
-      `Getting food stats for user: ${req.user.email}, days: ${days}`
-    );
-
+    this.logger.log(`Getting food stats for user: ${req.user.email}, days: ${days}`);
     // Simple stats endpoint for future use
     return {
       message: 'Food stats endpoint - coming soon',

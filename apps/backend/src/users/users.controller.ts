@@ -9,9 +9,10 @@ import {
   Logger,
   BadRequestException,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth-guard';
+
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UsersService } from './users.service';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -59,7 +60,6 @@ export class UsersController {
   @Get('stats')
   async getUserStats(@Request() req) {
     this.logger.log(`Stats request from user: ${req.user.email}`);
-
     // Placeholder for user statistics
     return {
       message: 'User statistics endpoint - coming soon',

@@ -10,15 +10,11 @@ export class SupabaseService {
   constructor(private configService: ConfigService) {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
     const supabaseKey = this.configService.get<string>('SUPABASE_SERVICE_KEY');
-
     if (!supabaseUrl || !supabaseKey) {
       this.logger.error('Supabase configuration missing');
-      this.logger.error(
-        'Required: SUPABASE_URL and SUPABASE_SERVICE_KEY in .env file'
-      );
+      this.logger.error('Required: SUPABASE_URL and SUPABASE_SERVICE_KEY in .env file');
       throw new Error('Supabase URL and Service Key are required');
     }
-
     try {
       this.supabase = createClient(supabaseUrl, supabaseKey, {
         auth: {
@@ -46,12 +42,10 @@ export class SupabaseService {
       const { data, error } = await this.supabase
         .from('users')
         .select('count', { count: 'exact', head: true });
-
       if (error) {
         this.logger.error('❌ Supabase connection test failed:', error.message);
         return false;
       }
-
       this.logger.log('✅ Supabase connection test successful');
       return true;
     } catch (error) {
@@ -62,27 +56,16 @@ export class SupabaseService {
 
   async checkTablesExist(): Promise<boolean> {
     try {
-      const requiredTables = [
-        'users',
-        'daily_logs',
-        'food_entries',
-        'activity_entries',
-      ];
-
+      const requiredTables = ['users', 'daily_logs', 'food_entries', 'activity_entries'];
       for (const table of requiredTables) {
         const { error } = await this.supabase
           .from(table)
           .select('*', { count: 'exact', head: true });
-
         if (error) {
-          this.logger.error(
-            `❌ Table '${table}' not accessible:`,
-            error.message
-          );
+          this.logger.error(`❌ Table '${table}' not accessible:`, error.message);
           return false;
         }
       }
-
       this.logger.log('✅ All required tables are accessible');
       return true;
     } catch (error) {

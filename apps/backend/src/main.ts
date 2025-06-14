@@ -1,11 +1,11 @@
-import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
+
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
   // Security headers
   app.use(
     helmet({
@@ -40,11 +40,7 @@ async function bootstrap() {
     origin:
       process.env.NODE_ENV === 'production'
         ? ['https://yourdomain.com']
-        : [
-            'http://localhost:3000',
-            'http://localhost:19006',
-            'http://localhost:8081',
-          ],
+        : ['http://localhost:3000', 'http://localhost:19006', 'http://localhost:8081'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -57,5 +53,4 @@ async function bootstrap() {
 
   console.log(`🛡️ Secured backend running on http://localhost:${port}/api`);
 }
-
 bootstrap();

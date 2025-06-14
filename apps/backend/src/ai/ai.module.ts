@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+
 import { AiService } from './ai.service';
 import { AiValidationService } from './validation/ai-validation.service';
 

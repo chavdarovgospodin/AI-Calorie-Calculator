@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+import { ActivityModule } from 'src/activity/activity.module';
+
+import { DatabaseModule } from '../database/database.module';
+
 import { DailyLogsController } from './daily-logs.controller';
 import { DailyLogsService } from './daily-logs.service';
-import { DatabaseModule } from '../database/database.module';
-import { ActivityModule } from 'src/activity/activity.module';
 
 @Module({
   imports: [DatabaseModule, ActivityModule],

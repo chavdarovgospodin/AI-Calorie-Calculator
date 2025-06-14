@@ -1,15 +1,15 @@
-import React from 'react';
 import { StatusBar } from 'expo-status-bar';
+import React from 'react';
 import Toast from 'react-native-toast-message';
 
-import { AuthProvider } from './src/contexts/AuthContext';
 import { AppNavigation } from './src/components';
+import { AuthProvider } from './src/contexts/AuthContext';
 
 export default function App() {
   return (
     <AuthProvider>
       <AppNavigation />
-      <StatusBar style="auto" />
+      <StatusBar style='auto' />
       <Toast />
     </AuthProvider>
   );

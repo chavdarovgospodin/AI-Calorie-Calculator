@@ -13,11 +13,10 @@ import Toast from 'react-native-toast-message';
 import { useAuth } from '../../contexts/AuthContext';
 import { styles } from './styles';
 
-const LoginScreen = ()  => {
+const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login, isLoading, error, clearError } = useAuth();
-
   useEffect(() => {
     if (error) {
       clearError();
@@ -44,16 +43,14 @@ const LoginScreen = ()  => {
       });
       return;
     }
-
     if (!password.trim()) {
       Toast.show({
         type: 'error',
-        text1: 'Error', 
+        text1: 'Error',
         text2: 'Please enter your password',
       });
       return;
     }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Toast.show({
@@ -63,39 +60,28 @@ const LoginScreen = ()  => {
       });
       return;
     }
-
     try {
       await login(email.trim(), password);
-      
+
       Toast.show({
         type: 'success',
         text1: 'Welcome!',
         text2: 'Login successful',
       });
-      
     } catch (error) {
       console.log('Login error handled by context');
     }
   };
-
   const handleForgotPassword = () => {
-    Alert.alert(
-      'Forgot Password',
-      'Password reset functionality coming soon!',
-      [{ text: 'OK' }]
-    );
+    Alert.alert('Forgot Password', 'Password reset functionality coming soon!', [
+      { text: 'OK' },
+    ]);
   };
-
   const handleRegister = () => {
-    Alert.alert(
-      'Register',
-      'Registration screen coming soon!',
-      [{ text: 'OK' }]
-    );
+    Alert.alert('Register', 'Registration screen coming soon!', [{ text: 'OK' }]);
   };
-
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
@@ -108,24 +94,24 @@ const LoginScreen = ()  => {
         <View style={styles.form}>
           <TextInput
             style={styles.input}
-            placeholder="Email"
+            placeholder='Email'
             value={email}
             onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
+            keyboardType='email-address'
+            autoCapitalize='none'
             autoCorrect={false}
-            autoComplete="email"
+            autoComplete='email'
             editable={!isLoading}
           />
 
           <TextInput
             style={styles.input}
-            placeholder="Password"
+            placeholder='Password'
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            autoCapitalize="none"
-            autoComplete="password"
+            autoCapitalize='none'
+            autoComplete='password'
             editable={!isLoading}
           />
 
@@ -136,13 +122,13 @@ const LoginScreen = ()  => {
             activeOpacity={0.8}
           >
             {isLoading ? (
-              <ActivityIndicator color="white" />
+              <ActivityIndicator color='white' />
             ) : (
               <Text style={styles.buttonText}>Login</Text>
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.linkButton}
             onPress={handleForgotPassword}
             disabled={isLoading}
@@ -150,7 +136,7 @@ const LoginScreen = ()  => {
             <Text style={styles.linkText}>Forgot Password?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.linkButton}
             onPress={handleRegister}
             disabled={isLoading}
@@ -167,6 +153,5 @@ const LoginScreen = ()  => {
       </View>
     </KeyboardAvoidingView>
   );
-}
-
+};
 export default LoginScreen;

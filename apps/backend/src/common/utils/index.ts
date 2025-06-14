@@ -10,13 +10,11 @@ export const calculateDailyCalories = (
 ): number => {
   // Mifflin-St Jeor Equation for BMR (Basal Metabolic Rate)
   let bmr: number;
-
   if (gender === Gender.MALE) {
     bmr = 10 * weight + 6.25 * height - 5 * age + 5;
   } else {
     bmr = 10 * weight + 6.25 * height - 5 * age - 161;
   }
-
   // Activity level multipliers
   const activityMultipliers = {
     [ActivityLevel.SEDENTARY]: 1.2,
@@ -25,10 +23,8 @@ export const calculateDailyCalories = (
     [ActivityLevel.VERY_ACTIVE]: 1.725,
     [ActivityLevel.EXTREMELY_ACTIVE]: 1.9,
   };
-
   // Calculate TDEE (Total Daily Energy Expenditure)
   const tdee = bmr * activityMultipliers[activityLevel];
-
   // Adjust based on goal
   switch (goal) {
     case Goal.LOSE_WEIGHT:

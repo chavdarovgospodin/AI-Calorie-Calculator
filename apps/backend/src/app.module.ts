@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
-import { HealthModule } from './health/health.module';
-import { DatabaseModule } from './database/database.module';
-import { AiModule } from './ai/ai.module';
-import { FoodModule } from './food/food.module';
-import { UsersModule } from './users/users.module';
-import { DailyLogsModule } from './daily-logs/daily-logs.module';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+
 import { ActivityModule } from './activity/activity.module';
+import { AiModule } from './ai/ai.module';
+import { AuthModule } from './auth/auth.module';
+import { DailyLogsModule } from './daily-logs/daily-logs.module';
+import { DatabaseModule } from './database/database.module';
+import { FoodModule } from './food/food.module';
+import { HealthModule } from './health/health.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [

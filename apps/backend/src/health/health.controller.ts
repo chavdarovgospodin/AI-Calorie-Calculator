@@ -10,7 +10,6 @@ export class HealthController {
     try {
       // Test database connection
       const dbHealthy = await this.supabaseService.testConnection();
-
       return {
         status: dbHealthy ? 'ok' : 'error',
         timestamp: new Date().toISOString(),
@@ -34,7 +33,6 @@ export class HealthController {
   async checkDatabase() {
     try {
       const isConnected = await this.supabaseService.testConnection();
-
       if (!isConnected) {
         return {
           status: 'error',
@@ -42,11 +40,9 @@ export class HealthController {
           timestamp: new Date().toISOString(),
         };
       }
-
       const { count, error } = await this.supabaseService.client
         .from('users')
         .select('*', { count: 'exact', head: true });
-
       if (error) {
         return {
           status: 'error',
@@ -54,7 +50,6 @@ export class HealthController {
           timestamp: new Date().toISOString(),
         };
       }
-
       return {
         status: 'ok',
         database: {
