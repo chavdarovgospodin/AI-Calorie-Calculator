@@ -16,7 +16,9 @@ export class AiService {
   ) {
     const apiKey = configService.get<string>('GOOGLE_AI_API_KEY');
     if (!apiKey) {
-      this.logger.error('Google AI API key is missing in environment variables');
+      this.logger.error(
+        'Google AI API key is missing in environment variables'
+      );
       throw new Error('GOOGLE_AI_API_KEY is required');
     }
     try {
@@ -32,7 +34,8 @@ export class AiService {
     const startTime = Date.now();
     this.logger.log(`🔍 Analyzing food text: "${description}"`);
 
-    const validation = await this.aiValidationService.validateTextFood(description);
+    const validation =
+      await this.aiValidationService.validateTextFood(description);
     if (!validation.isValid) {
       this.logger.warn(`❌ Text validation failed: ${validation.reason}`);
       throw this.aiValidationService.createValidationError(validation);
@@ -101,7 +104,9 @@ export class AiService {
       return analysis;
     } catch (error) {
       const processingTime = Date.now() - startTime;
-      this.logger.error(`❌ Text food analysis failed after ${processingTime}ms: ${error.message}`);
+      this.logger.error(
+        `❌ Text food analysis failed after ${processingTime}ms: ${error.message}`
+      );
 
       if (error.message.includes('JSON')) {
         throw new Error('AI returned invalid response format');
@@ -118,15 +123,20 @@ export class AiService {
 
   async analyzeImageFood(imageBase64: string): Promise<NutritionAnalysis> {
     const startTime = Date.now();
-    this.logger.log(`📸 Analyzing food image (${Math.round(imageBase64.length / 1024)}KB)`);
+    this.logger.log(
+      `📸 Analyzing food image (${Math.round(imageBase64.length / 1024)}KB)`
+    );
 
-    const validation = await this.aiValidationService.validateImageFood(imageBase64);
+    const validation =
+      await this.aiValidationService.validateImageFood(imageBase64);
     if (!validation.isValid) {
       this.logger.warn(`❌ Image validation failed: ${validation.reason}`);
       throw this.aiValidationService.createValidationError(validation);
     }
     if (validation.confidence < 0.6) {
-      this.logger.warn(`⚠️ Low confidence image (${Math.round(validation.confidence * 100)}%)`);
+      this.logger.warn(
+        `⚠️ Low confidence image (${Math.round(validation.confidence * 100)}%)`
+      );
     } else {
       this.logger.log(
         `✅ Image validation passed (${Math.round(validation.confidence * 100)}% confidence)`
@@ -211,7 +221,13 @@ export class AiService {
   }
 
   private validateNutritionAnalysis(analysis: any): void {
-    const requiredFields = ['totalCalories', 'protein', 'carbs', 'fat', 'foods'];
+    const requiredFields = [
+      'totalCalories',
+      'protein',
+      'carbs',
+      'fat',
+      'foods',
+    ];
     for (const field of requiredFields) {
       if (analysis[field] === undefined || analysis[field] === null) {
         throw new Error(`Missing required field: ${field}`);
@@ -227,7 +243,14 @@ export class AiService {
       throw new Error('Foods must be an array');
     }
     analysis.foods.forEach((food: any, index: number) => {
-      const requiredFoodFields = ['name', 'quantity', 'calories', 'protein', 'carbs', 'fat'];
+      const requiredFoodFields = [
+        'name',
+        'quantity',
+        'calories',
+        'protein',
+        'carbs',
+        'fat',
+      ];
       for (const field of requiredFoodFields) {
         if (food[field] === undefined || food[field] === null) {
           throw new Error(`Missing field ${field} in food item ${index}`);
@@ -249,7 +272,10 @@ export class AiService {
       }
       return false;
     } catch (error) {
-      this.logger.error('❌ Google AI API connection test failed:', error.message);
+      this.logger.error(
+        '❌ Google AI API connection test failed:',
+        error.message
+      );
       return false;
     }
   }

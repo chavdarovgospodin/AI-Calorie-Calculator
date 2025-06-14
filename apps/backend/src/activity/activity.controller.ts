@@ -33,7 +33,10 @@ export class ActivityController {
     );
 
     try {
-      return await this.activityService.syncActivityData(req.user.id, activityData);
+      return await this.activityService.syncActivityData(
+        req.user.id,
+        activityData
+      );
     } catch (error) {
       this.logger.error(`Activity sync failed: ${error.message}`);
       throw error;
@@ -60,7 +63,9 @@ export class ActivityController {
 
   @Get('preferences')
   async getPreferences(@Request() req) {
-    this.logger.log(`Activity preferences request from user: ${req.user.email}`);
+    this.logger.log(
+      `Activity preferences request from user: ${req.user.email}`
+    );
 
     try {
       return await this.activityService.getUserActivityPreferences(req.user.id);
@@ -71,11 +76,17 @@ export class ActivityController {
   }
 
   @Put('preferences')
-  async updatePreferences(@Request() req, @Body() preferences: UserActivityPreferencesDto) {
+  async updatePreferences(
+    @Request() req,
+    @Body() preferences: UserActivityPreferencesDto
+  ) {
     this.logger.log(`Update activity preferences from user: ${req.user.email}`);
 
     try {
-      return await this.activityService.updateActivityPreferences(req.user.id, preferences);
+      return await this.activityService.updateActivityPreferences(
+        req.user.id,
+        preferences
+      );
     } catch (error) {
       this.logger.error(`Update preferences failed: ${error.message}`);
       throw error;
@@ -83,13 +94,19 @@ export class ActivityController {
   }
 
   @Post('manual')
-  async addManualActivity(@Request() req, @Body() activityEntry: ManualActivityEntryDto) {
+  async addManualActivity(
+    @Request() req,
+    @Body() activityEntry: ManualActivityEntryDto
+  ) {
     this.logger.log(
       `Manual activity entry from user: ${req.user.email}: ${activityEntry.activityType}`
     );
 
     try {
-      return await this.activityService.addManualActivity(req.user.id, activityEntry);
+      return await this.activityService.addManualActivity(
+        req.user.id,
+        activityEntry
+      );
     } catch (error) {
       this.logger.error(`Manual activity entry failed: ${error.message}`);
       throw error;

@@ -62,7 +62,8 @@ export class UsersService {
           height: updateData.height || currentUser.height,
           weight: updateData.weight || currentUser.weight,
           goal: updateData.goal || currentUser.goal,
-          activity_level: updateData.activity_level || currentUser.activity_level,
+          activity_level:
+            updateData.activity_level || currentUser.activity_level,
         };
         const newCalorieGoal = calculateDailyCalories(
           calculationData.age,
@@ -101,7 +102,10 @@ export class UsersService {
     this.logger.log(`Deleting profile for user: ${userId}`);
 
     try {
-      const { error } = await this.supabaseService.client.from('users').delete().eq('id', userId);
+      const { error } = await this.supabaseService.client
+        .from('users')
+        .delete()
+        .eq('id', userId);
       if (error) {
         this.logger.error(`Database delete error: ${error.message}`);
         throw error;

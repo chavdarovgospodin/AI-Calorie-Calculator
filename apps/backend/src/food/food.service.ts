@@ -15,7 +15,10 @@ export class FoodService {
     private aiService: AiService
   ) {}
 
-  async analyzeTextFood(userId: string, description: string): Promise<NutritionAnalysis> {
+  async analyzeTextFood(
+    userId: string,
+    description: string
+  ): Promise<NutritionAnalysis> {
     this.logger.log(`Analyzing text food for user ${userId}: ${description}`);
 
     try {
@@ -41,7 +44,10 @@ export class FoodService {
     }
   }
 
-  async analyzeImageFood(userId: string, imageBase64: string): Promise<NutritionAnalysis> {
+  async analyzeImageFood(
+    userId: string,
+    imageBase64: string
+  ): Promise<NutritionAnalysis> {
     this.logger.log(`Analyzing image food for user ${userId}`);
 
     try {
@@ -81,17 +87,20 @@ export class FoodService {
         .eq('date', today)
         .single();
       if (!dailyLog) {
-        this.logger.log(`Creating new daily log for user ${userId} on ${today}`);
-        const { data: newLog, error: logError } = await this.supabaseService.client
-          .from('daily_logs')
-          .insert({
-            user_id: userId,
-            date: today,
-            total_calories_consumed: 0,
-            calories_burned: 0,
-          })
-          .select()
-          .single();
+        this.logger.log(
+          `Creating new daily log for user ${userId} on ${today}`
+        );
+        const { data: newLog, error: logError } =
+          await this.supabaseService.client
+            .from('daily_logs')
+            .insert({
+              user_id: userId,
+              date: today,
+              total_calories_consumed: 0,
+              calories_burned: 0,
+            })
+            .select()
+            .single();
         if (logError) throw logError;
         dailyLog = newLog;
       }

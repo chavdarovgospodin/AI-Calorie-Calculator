@@ -24,7 +24,9 @@ export class DailyLogsController {
 
   @Get('dashboard')
   async getDashboard(@Request() req, @Query('date') date?: string) {
-    this.logger.log(`Dashboard request from user: ${req.user.email}, date: ${date || 'today'}`);
+    this.logger.log(
+      `Dashboard request from user: ${req.user.email}, date: ${date || 'today'}`
+    );
 
     try {
       return await this.dailyLogsService.getDashboardData(req.user.id, date);
@@ -36,7 +38,9 @@ export class DailyLogsController {
 
   @Get('daily')
   async getDailyLog(@Request() req, @Query('date') date?: string) {
-    this.logger.log(`Daily log request from user: ${req.user.email}, date: ${date || 'today'}`);
+    this.logger.log(
+      `Daily log request from user: ${req.user.email}, date: ${date || 'today'}`
+    );
 
     try {
       return await this.dailyLogsService.getDailyLog(req.user.id, date);
@@ -76,7 +80,11 @@ export class DailyLogsController {
     try {
       const yearNum = year ? parseInt(year) : undefined;
       const monthNum = month ? parseInt(month) : undefined;
-      return await this.dailyLogsService.getMonthlyStats(req.user.id, yearNum, monthNum);
+      return await this.dailyLogsService.getMonthlyStats(
+        req.user.id,
+        yearNum,
+        monthNum
+      );
     } catch (error) {
       this.logger.error(`Monthly stats request failed: ${error.message}`);
       throw new BadRequestException(error.message);
@@ -88,7 +96,10 @@ export class DailyLogsController {
     this.logger.log(`Create daily log request from user: ${req.user.email}`);
 
     try {
-      return await this.dailyLogsService.createDailyLog(req.user.id, createData);
+      return await this.dailyLogsService.createDailyLog(
+        req.user.id,
+        createData
+      );
     } catch (error) {
       this.logger.error(`Create daily log failed: ${error.message}`);
       throw new BadRequestException(error.message);
@@ -97,7 +108,9 @@ export class DailyLogsController {
 
   @Get('progress')
   async getProgress(@Request() req, @Query('days') days: string = '30') {
-    this.logger.log(`Progress request from user: ${req.user.email}, days: ${days}`);
+    this.logger.log(
+      `Progress request from user: ${req.user.email}, days: ${days}`
+    );
 
     try {
       // Simple progress calculation
@@ -126,10 +139,15 @@ export class DailyLogsController {
 
   @Get('enhanced-dashboard')
   async getEnhancedDashboardData(@Request() req, @Query('date') date?: string) {
-    this.logger.log(`Enhanced Dashboard for: ${req.user.email}, date: ${date || 'today'}`);
+    this.logger.log(
+      `Enhanced Dashboard for: ${req.user.email}, date: ${date || 'today'}`
+    );
 
     try {
-      return await this.dailyLogsService.getEnhancedDashboardData(req.user.id, date);
+      return await this.dailyLogsService.getEnhancedDashboardData(
+        req.user.id,
+        date
+      );
     } catch (error) {
       this.logger.error(`Enhanced Dashboard request failed: ${error.message}`);
       throw new BadRequestException(error.message);

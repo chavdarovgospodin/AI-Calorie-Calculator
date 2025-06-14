@@ -9,6 +9,8 @@
     "apps/mobile"
   ],
   "scripts": {
+    "format": "prettier --write . && eslint . --fix",
+    "format:check": "prettier --check . && eslint .",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:backend": "eslint apps/backend/ --fix",

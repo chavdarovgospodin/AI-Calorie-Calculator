@@ -233,37 +233,54 @@ export default [
         },
       ],
 
-      // Imports организация
+      // Imports организация (синхронизирано с VSCode)
       'import/order': [
         'error',
         {
           groups: [
-            'builtin', // Node.js built-ins
-            'external', // npm packages
-            'internal', // Internal modules
-            'parent', // Parent directories
-            'sibling', // Same directory
-            'index', // Index files
+            'builtin', // Node.js built-ins (fs, path, etc.)
+            'external', // npm packages (react, lodash, etc.)
+            'internal', // Internal modules (../../utils)
+            'parent', // Parent directories (../components)
+            'sibling', // Same directory (./Button)
+            'index', // Index files (./index)
+            'type', // Type imports
           ],
           'newlines-between': 'always',
           alphabetize: {
             order: 'asc',
             caseInsensitive: true,
           },
+          pathGroups: [
+            {
+              pattern: '@/**',
+              group: 'internal',
+              position: 'before',
+            },
+          ],
+          pathGroupsExcludedImportTypes: ['builtin'],
         },
       ],
 
       // Забранява unused imports
-      'import/no-unused-modules': 'warn',
-      'import/no-duplicates': 'error',
-
-      // Специфични за NestJS decorators
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
           ignoreRestSiblings: true,
+        },
+      ],
+
+      // Премахва duplicate imports
+      'import/no-duplicates': 'error',
+
+      // TypeScript specific import rules
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          prefer: 'type-imports',
+          fixStyle: 'separate-type-imports',
         },
       ],
     },

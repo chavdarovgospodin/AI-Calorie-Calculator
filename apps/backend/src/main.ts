@@ -40,7 +40,11 @@ async function bootstrap() {
     origin:
       process.env.NODE_ENV === 'production'
         ? ['https://yourdomain.com']
-        : ['http://localhost:3000', 'http://localhost:19006', 'http://localhost:8081'],
+        : [
+            'http://localhost:3000',
+            'http://localhost:19006',
+            'http://localhost:8081',
+          ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],

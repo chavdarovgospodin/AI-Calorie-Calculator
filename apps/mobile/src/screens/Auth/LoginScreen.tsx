@@ -73,12 +73,16 @@ const LoginScreen = () => {
     }
   };
   const handleForgotPassword = () => {
-    Alert.alert('Forgot Password', 'Password reset functionality coming soon!', [
-      { text: 'OK' },
-    ]);
+    Alert.alert(
+      'Forgot Password',
+      'Password reset functionality coming soon!',
+      [{ text: 'OK' }]
+    );
   };
   const handleRegister = () => {
-    Alert.alert('Register', 'Registration screen coming soon!', [{ text: 'OK' }]);
+    Alert.alert('Register', 'Registration screen coming soon!', [
+      { text: 'OK' },
+    ]);
   };
   return (
     <KeyboardAvoidingView
@@ -94,24 +98,24 @@ const LoginScreen = () => {
         <View style={styles.form}>
           <TextInput
             style={styles.input}
-            placeholder='Email'
+            placeholder="Email"
             value={email}
             onChangeText={setEmail}
-            keyboardType='email-address'
-            autoCapitalize='none'
+            keyboardType="email-address"
+            autoCapitalize="none"
             autoCorrect={false}
-            autoComplete='email'
+            autoComplete="email"
             editable={!isLoading}
           />
 
           <TextInput
             style={styles.input}
-            placeholder='Password'
+            placeholder="Password"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            autoCapitalize='none'
-            autoComplete='password'
+            autoCapitalize="none"
+            autoComplete="password"
             editable={!isLoading}
           />
 
@@ -122,7 +126,7 @@ const LoginScreen = () => {
             activeOpacity={0.8}
           >
             {isLoading ? (
-              <ActivityIndicator color='white' />
+              <ActivityIndicator color="white" />
             ) : (
               <Text style={styles.buttonText}>Login</Text>
             )}

@@ -1,5 +1,9 @@
-import { IsOptional, IsNumber, IsEnum, IsString, Min, Max } from 'class-validator';
-import { ActivityLevel, Gender, Goal } from 'src/common/interfaces/user.interface';
+import { IsEnum, IsNumber, IsOptional, Max, Min } from 'class-validator';
+import {
+  ActivityLevel,
+  Gender,
+  Goal,
+} from 'src/common/interfaces/user.interface';
 
 export class UpdateProfileDto {
   @IsOptional()

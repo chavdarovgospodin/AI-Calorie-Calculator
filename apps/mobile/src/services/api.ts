@@ -58,7 +58,9 @@ const createApiClient = (): AxiosInstance => {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-      console.log(`🔌 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+      console.log(
+        `🔌 API Request: ${config.method?.toUpperCase()} ${config.url}`
+      );
       return config;
     },
     error => Promise.reject(error)

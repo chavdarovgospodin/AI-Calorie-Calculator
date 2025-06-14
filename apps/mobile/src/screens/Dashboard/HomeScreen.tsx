@@ -99,7 +99,9 @@ const HomeScreen = () => {
   return (
     <ScrollView
       style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
       <View style={styles.header}>
         <View>
@@ -117,12 +119,16 @@ const HomeScreen = () => {
         {dashboardData ? (
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{dashboardData.netCalories || 0}</Text>
+              <Text style={styles.statNumber}>
+                {dashboardData.netCalories || 0}
+              </Text>
               <Text style={styles.statLabel}>Net Calories</Text>
             </View>
 
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{dashboardData.dailyCalorieGoal || 0}</Text>
+              <Text style={styles.statNumber}>
+                {dashboardData.dailyCalorieGoal || 0}
+              </Text>
               <Text style={styles.statLabel}>Daily Goal</Text>
             </View>
 
@@ -143,7 +149,9 @@ const HomeScreen = () => {
               <View
                 style={[
                   styles.progressFill,
-                  { width: `${Math.min(dashboardData.progressPercentage, 100)}%` },
+                  {
+                    width: `${Math.min(dashboardData.progressPercentage, 100)}%`,
+                  },
                 ]}
               />
             </View>
@@ -157,7 +165,10 @@ const HomeScreen = () => {
       <View style={styles.actionsCard}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
 
-        <TouchableOpacity style={styles.actionButton} onPress={testFoodAnalysis}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={testFoodAnalysis}
+        >
           <Text style={styles.actionIcon}>🧪</Text>
           <Text style={styles.actionText}>Test Food Analysis</Text>
         </TouchableOpacity>

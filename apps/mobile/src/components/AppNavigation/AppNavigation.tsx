@@ -32,13 +32,13 @@ const AppNavigation = () => {
       >
         {isAuthenticated ? (
           <Stack.Screen
-            name='Home'
+            name="Home"
             component={HomeScreen}
             options={{ title: '🍎 Calorie Tracker' }}
           />
         ) : (
           <Stack.Screen
-            name='Login'
+            name="Login"
             component={LoginScreen}
             options={{
               title: 'Login',

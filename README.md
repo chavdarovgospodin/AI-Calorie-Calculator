@@ -1,6 +1,7 @@
 # 🍎 Calorie Tracker
 
-AI-powered calorie tracking application with image recognition and nutritional analysis.
+AI-powered calorie tracking application with image recognition and nutritional
+analysis.
 
 ## 🎯 Features
 
@@ -46,6 +47,7 @@ calorie-tracker/
 ### Setup
 
 1. **Clone and install**
+
    ```bash
    git clone https://github.com/yourusername/calorie-tracker.git
    cd calorie-tracker
@@ -53,17 +55,19 @@ calorie-tracker/
    ```
 
 2. **Environment setup**
+
    ```bash
    cp .env.example .env
    # Fill in your API keys and database URLs
    ```
 
 3. **Start development**
+
    ```bash
    # Backend only
    npm run backend:dev
 
-   # Mobile only  
+   # Mobile only
    npm run mobile:dev
 
    # Both together
@@ -93,15 +97,18 @@ npm run android     # Android emulator
 ## 📱 API Endpoints
 
 ### Authentication
+
 - `POST /auth/register` - User registration
 - `POST /auth/login` - User login
 
 ### Food Analysis
+
 - `POST /food/analyze/text` - Analyze food from text
 - `POST /food/analyze/image` - Analyze food from image
 - `GET /food/entries` - Get user's food entries
 
 ### Dashboard
+
 - `GET /daily-logs/dashboard` - Get daily dashboard data
 - `GET /daily-logs/weekly` - Get weekly logs
 
@@ -138,6 +145,7 @@ docker-compose up -d
 ## 📊 Database Schema
 
 The app uses Supabase with the following main tables:
+
 - `users` - User profiles and settings
 - `daily_logs` - Daily calorie and activity logs
 - `food_entries` - Individual food entries with nutrition data
@@ -153,7 +161,8 @@ The app uses Supabase with the following main tables:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
+for details.
 
 ## 🔗 Links
 

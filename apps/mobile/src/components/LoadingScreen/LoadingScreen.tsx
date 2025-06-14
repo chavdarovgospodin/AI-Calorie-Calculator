@@ -4,7 +4,7 @@ import { styles } from './styles';
 
 const LoadingScreen = () => (
   <View style={styles.loadingContainer}>
-    <ActivityIndicator size='large' color='#007AFF' />
+    <ActivityIndicator size="large" color="#007AFF" />
     <Text style={styles.loadingText}>Loading...</Text>
   </View>
 );

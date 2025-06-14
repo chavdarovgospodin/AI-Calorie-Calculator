@@ -1,6 +1,15 @@
-import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ActivityLevel, Gender, Goal } from 'src/common/interfaces/user.interface';
+import {
+  ActivityLevel,
+  Gender,
+  Goal,
+} from 'src/common/interfaces/user.interface';
 import { calculateDailyCalories } from 'src/common/utils';
 import { SupabaseService } from 'src/database/supabase.service';
 
@@ -31,10 +40,11 @@ export class AuthService {
         throw new ConflictException('User with this email already exists');
       }
       // Register with Supabase Auth
-      const { data: authData, error: authError } = await this.supabaseService.client.auth.signUp({
-        email: registerDto.email,
-        password: registerDto.password,
-      });
+      const { data: authData, error: authError } =
+        await this.supabaseService.client.auth.signUp({
+          email: registerDto.email,
+          password: registerDto.password,
+        });
       if (authError) {
         this.logger.error(`Supabase auth error: ${authError.message}`);
         throw new Error(`Registration failed: ${authError.message}`);
@@ -52,25 +62,29 @@ export class AuthService {
         registerDto.activity_level || ActivityLevel.MODERATELY_ACTIVE
       );
       // Create user profile in our users table
-      const { data: userData, error: userError } = await this.supabaseService.client
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          email: registerDto.email,
-          age: registerDto.age,
-          gender: registerDto.gender,
-          height: registerDto.height,
-          weight: registerDto.weight,
-          goal: registerDto.goal,
-          daily_calorie_goal: dailyCalorieGoal,
-          activity_level: registerDto.activity_level || ActivityLevel.MODERATELY_ACTIVE,
-        })
-        .select()
-        .single();
+      const { data: userData, error: userError } =
+        await this.supabaseService.client
+          .from('users')
+          .insert({
+            id: authData.user.id,
+            email: registerDto.email,
+            age: registerDto.age,
+            gender: registerDto.gender,
+            height: registerDto.height,
+            weight: registerDto.weight,
+            goal: registerDto.goal,
+            daily_calorie_goal: dailyCalorieGoal,
+            activity_level:
+              registerDto.activity_level || ActivityLevel.MODERATELY_ACTIVE,
+          })
+          .select()
+          .single();
       if (userError) {
         this.logger.error(`User profile creation error: ${userError.message}`);
         // Clean up auth user if profile creation fails
-        await this.supabaseService.client.auth.admin.deleteUser(authData.user.id);
+        await this.supabaseService.client.auth.admin.deleteUser(
+          authData.user.id
+        );
         throw new Error('Failed to create user profile');
       }
       // Generate JWT token
@@ -105,11 +119,12 @@ export class AuthService {
         throw new UnauthorizedException('Invalid email or password');
       }
       // Get user profile
-      const { data: userData, error: userError } = await this.supabaseService.client
-        .from('users')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
+      const { data: userData, error: userError } =
+        await this.supabaseService.client
+          .from('users')
+          .select('*')
+          .eq('id', authData.user.id)
+          .single();
       if (userError || !userData) {
         this.logger.error(`User profile not found: ${authData.user.id}`);
         throw new UnauthorizedException('User profile not found');
@@ -127,7 +142,9 @@ export class AuthService {
       if (error instanceof UnauthorizedException) {
         throw error;
       }
-      throw new UnauthorizedException('Login failed. Please check your credentials.');
+      throw new UnauthorizedException(
+        'Login failed. Please check your credentials.'
+      );
     }
   }
 }

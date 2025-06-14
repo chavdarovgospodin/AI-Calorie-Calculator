@@ -35,7 +35,8 @@ coverage/
 test-results/
 
 # IDE and Editor files
-.vscode/settings.json
+!.vscode/settings.json
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo

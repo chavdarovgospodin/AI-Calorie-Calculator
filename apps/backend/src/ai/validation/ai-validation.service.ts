@@ -209,8 +209,10 @@ export class AiValidationService {
         return {
           isValid: false,
           confidence: 0.9,
-          reason: 'Това изглежда като въпрос или заявка, не описание на консумирана храна',
-          suggestion: 'Вместо това опишете какво сте яли: "ядох салата с домати" или "пих кафе"',
+          reason:
+            'Това изглежда като въпрос или заявка, не описание на консумирана храна',
+          suggestion:
+            'Вместо това опишете какво сте яли: "ядох салата с домати" или "пих кафе"',
         };
       }
     }
@@ -232,7 +234,9 @@ export class AiValidationService {
       'изпих',
       'подхранвах',
     ];
-    const hasConsumptionVerb = consumptionVerbs.some(verb => lowerText.includes(verb));
+    const hasConsumptionVerb = consumptionVerbs.some(verb =>
+      lowerText.includes(verb)
+    );
     if (hasConsumptionVerb) {
       return { isValid: true, confidence: 0.9 };
     }
@@ -267,21 +271,30 @@ export class AiValidationService {
       'чушка',
       'спанак',
     ];
-    const hasKeyword = foodKeywords.some(keyword => lowerText.includes(keyword));
+    const hasKeyword = foodKeywords.some(keyword =>
+      lowerText.includes(keyword)
+    );
     // If has food keyword, check context
     if (hasKeyword) {
       // Check if it looks like a question about the food rather than consumption
-      if (lowerText.includes('?') || lowerText.startsWith('какво') || lowerText.startsWith('кои')) {
+      if (
+        lowerText.includes('?') ||
+        lowerText.startsWith('какво') ||
+        lowerText.startsWith('кои')
+      ) {
         return {
           isValid: false,
           confidence: 0.8,
           reason: 'Изглежда като въпрос за храна, не описание на консумация',
-          suggestion: 'Опишете конкретно какво сте яли: "ядох 200г ориз с пилешко"',
+          suggestion:
+            'Опишете конкретно какво сте яли: "ядох 200г ориз с пилешко"',
         };
       }
       // Allow simple food descriptions like "1 ябълка", "200г риба"
       if (
-        /\d+\s*(г|грам|мл|ml|гр|бр|броя|чаши|чаша|филии|филия)/.test(lowerText) ||
+        /\d+\s*(г|грам|мл|ml|гр|бр|броя|чаши|чаша|филии|филия)/.test(
+          lowerText
+        ) ||
         /^\d+\s+[а-яё]+/.test(lowerText)
       ) {
         return { isValid: true, confidence: 0.9 }; // High confidence for clear food + quantity
@@ -289,7 +302,9 @@ export class AiValidationService {
       return { isValid: true, confidence: 0.8 }; // Still high for food keywords
     }
     // Numbers + units could indicate food portions
-    if (/\d+\s*(г|грам|мл|ml|гр|бр|броя|чаши|чаша|филии|филия)/.test(lowerText)) {
+    if (
+      /\d+\s*(г|грам|мл|ml|гр|бр|броя|чаши|чаша|филии|филия)/.test(lowerText)
+    ) {
       return { isValid: true, confidence: 0.85 }; // High confidence for units
     }
     // Simple patterns like "1 ябълка", "2 банана" - very clear food descriptions
@@ -313,7 +328,8 @@ export class AiValidationService {
       isValid: true,
       confidence: 0.5,
       reason: 'Базова проверка - не можах да потвърдя със AI',
-      suggestion: 'За по-добри резултати опишете храната по-ясно с глагол: "ядох...", "пих..."',
+      suggestion:
+        'За по-добри резултати опишете храната по-ясно с глагол: "ядох...", "пих..."',
     };
   }
 
@@ -322,7 +338,8 @@ export class AiValidationService {
    */
   createValidationError(validation: ValidationResult): BadRequestException {
     const message = validation.reason || 'Невалиден вход за храна';
-    const suggestion = validation.suggestion || 'Моля опитайте отново с описание на храна';
+    const suggestion =
+      validation.suggestion || 'Моля опитайте отново с описание на храна';
     return new BadRequestException({
       error: 'INVALID_FOOD_INPUT',
       message,

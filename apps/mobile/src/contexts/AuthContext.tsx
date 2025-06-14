@@ -113,7 +113,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       dispatch({ type: 'AUTH_LOGOUT' });
     } catch (error) {
       console.error('❌ Auth check failed:', error);
-      dispatch({ type: 'AUTH_ERROR', payload: 'Failed to check authentication' });
+      dispatch({
+        type: 'AUTH_ERROR',
+        payload: 'Failed to check authentication',
+      });
     }
   };
   const login = async (email: string, password: string): Promise<void> => {
