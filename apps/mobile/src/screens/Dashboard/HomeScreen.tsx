@@ -7,9 +7,11 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
+
 import { useAuth } from '../../contexts/AuthContext';
 import { dashboardApi, foodApi } from '../../services/api';
-import Toast from 'react-native-toast-message';
+
 import { styles } from './styles';
 
 const HomeScreen = () => {

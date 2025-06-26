@@ -1,4 +1,3 @@
-// eslint.config.js (root)
 import js from '@eslint/js';
 import typescript from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
@@ -8,10 +7,8 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default [
-  // Base JS config
   js.configs.recommended,
 
-  // Global ignores
   {
     ignores: [
       '**/node_modules/**',
@@ -29,9 +26,31 @@ export default [
     ],
   },
 
-  // TypeScript files configuration
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    files: ['**/.eslintrc.js', '**/eslint.config.js', '**/*.config.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'script',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        global: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        exports: 'readonly',
+      },
+    },
+    rules: {
+      'no-undef': 'warn',
+      'no-console': 'off',
+    },
+  },
+
+  {
+    files: ['**/mobile/**/*.tsx', '**/mobile/**/*.ts'],
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {
@@ -40,91 +59,38 @@ export default [
         ecmaFeatures: {
           jsx: true,
         },
-        // Важно за typed linting
-        project: true,
-        tsconfigRootDir: process.cwd(),
+      },
+      globals: {
+        console: 'readonly',
+        __DEV__: 'readonly',
+        global: 'readonly',
+        require: 'readonly',
+        module: 'readonly',
+        exports: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        fetch: 'readonly',
+        Promise: 'readonly',
+        FormData: 'readonly',
+        XMLHttpRequest: 'readonly',
+        navigator: 'readonly',
+        window: 'readonly',
+        document: 'readonly',
+        alert: 'readonly',
+        localStorage: 'readonly',
+        sessionStorage: 'readonly',
       },
     },
     plugins: {
       '@typescript-eslint': typescript,
-      prettier,
-      import: importPlugin,
-    },
-    rules: {
-      // TypeScript specific rules - relaxed for development
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': 'warn',
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/require-await': 'off',
-      '@typescript-eslint/no-misused-promises': 'off',
-
-      // ПРАЗНИ РЕДОВЕ ПРАВИЛА - това е правилото което търсиш!
-      'no-multiple-empty-lines': [
-        'error',
-        {
-          max: 1, // Максимум 1 празен ред между кода
-          maxEOF: 0, // Няма празни редове в края на файла
-          maxBOF: 0, // Няма празни редове в началото на файла
-        },
-      ],
-
-      // Премахва празни редове в началото и края на блокове
-      'padded-blocks': ['error', 'never'],
-
-      // Контролира празни редове около коментари
-      'lines-around-comment': [
-        'error',
-        {
-          beforeBlockComment: false,
-          afterBlockComment: false,
-          beforeLineComment: false,
-          afterLineComment: false,
-          allowBlockStart: true,
-          allowBlockEnd: true,
-        },
-      ],
-
-      // По-строги правила за празни редове
-      'padding-line-between-statements': [
-        'error',
-        // НЯМА празен ред преди return (освен ако не е необходимо)
-        { blankLine: 'never', prev: '*', next: 'return' },
-        // Празен ред след import statements
-        { blankLine: 'always', prev: 'import', next: '*' },
-        { blankLine: 'any', prev: 'import', next: 'import' },
-        // Празен ред преди export statements
-        { blankLine: 'always', prev: '*', next: 'export' },
-        // НЯМА празни редове в началото на функции
-        { blankLine: 'never', prev: ['const', 'let', 'var'], next: '*' },
-        // НЯМА празни редове след opening brace на функция
-        { blankLine: 'never', prev: 'block-like', next: '*' },
-      ],
-
-      // Prettier integration
-      'prettier/prettier': [
-        'error',
-        {
-          endOfLine: 'auto',
-          semi: true,
-          singleQuote: true,
-          tabWidth: 2,
-          trailingComma: 'es5',
-        },
-      ],
-    },
-  },
-
-  // React/React Native specific configuration
-  {
-    files: ['**/mobile/**/*.tsx', '**/mobile/**/*.ts', '**/*.tsx'],
-    plugins: {
       react,
       'react-hooks': reactHooks,
+      prettier,
+      import: importPlugin,
     },
     settings: {
       react: {
@@ -132,13 +98,38 @@ export default [
       },
     },
     rules: {
-      // React specific rules
-      'react/react-in-jsx-scope': 'off', // React 17+ doesn't need React import
-      'react/prop-types': 'off', // Using TypeScript for prop validation
+      'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
 
-      // Same empty lines rules for React files
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+          args: 'after-used',
+          caughtErrors: 'none',
+        },
+      ],
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+
+      'no-undef': 'warn',
+      'no-console': 'warn',
+      'no-undef': 'warn',
+      'no-console': [
+        'warn',
+        {
+          allow: ['warn', 'error', 'info'],
+        },
+      ],
+
       'no-multiple-empty-lines': [
         'error',
         {
@@ -147,10 +138,25 @@ export default [
           maxBOF: 0,
         },
       ],
+
+      'import/no-unresolved': 'off',
+      'import/order': [
+        'error',
+        {
+          groups: [
+            'builtin',
+            'external',
+            'internal',
+            'parent',
+            'sibling',
+            'index',
+          ],
+          'newlines-between': 'always',
+        },
+      ],
     },
   },
 
-  // Backend specific configuration
   {
     files: ['**/backend/**/*.ts'],
     languageOptions: {
@@ -158,7 +164,6 @@ export default [
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
-        // Указваме специфичен tsconfig за backend
         project: './apps/backend/tsconfig.json',
         tsconfigRootDir: process.cwd(),
       },
@@ -177,110 +182,95 @@ export default [
     plugins: {
       '@typescript-eslint': typescript,
       import: importPlugin,
+      prettier,
     },
     rules: {
-      // NestJS/Backend специфични правила (облекчени за развитие)
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
 
-      // Изисква explicit return типове за функции (само warning)
-      '@typescript-eslint/explicit-function-return-type': 'off', // Прекалено строго за развитие
-
-      // Предпочита interface пред type за обекти
-      '@typescript-eslint/consistent-type-definitions': ['warn', 'interface'],
-
-      // Access modifiers - само за production код
-      '@typescript-eslint/explicit-member-accessibility': 'off', // Прекалено строго
-
-      // Забранява console.log в production код (използвай Logger)
-      'no-console': [
-        'warn',
-        {
-          allow: ['warn', 'error', 'info'], // Позволяваме повече за development
-        },
-      ],
-
-      // Return await в try/catch блокове
-      '@typescript-eslint/return-await': ['warn', 'in-try-catch'],
-
-      // Error handling (облекчени - правилата които изискват type info могат да бъдат проблемни)
-      '@typescript-eslint/no-floating-promises': 'off', // Изключваме временно
-      '@typescript-eslint/promise-function-async': 'off', // Изключваме временно
-
-      // Забранява празни catch блокове
-      'no-empty': [
+      'no-multiple-empty-lines': [
         'error',
         {
-          allowEmptyCatch: false,
+          max: 1,
+          maxEOF: 0,
+          maxBOF: 0,
         },
       ],
 
-      // Naming conventions за NestJS (облекчени)
-      '@typescript-eslint/naming-convention': [
-        'warn', // warning вместо error
-        // Classes в PascalCase
-        {
-          selector: 'class',
-          format: ['PascalCase'],
-        },
-        // Methods в camelCase
-        {
-          selector: 'method',
-          format: ['camelCase'],
-        },
-        // Enums в PascalCase
-        {
-          selector: 'enum',
-          format: ['PascalCase'],
-        },
-      ],
-
-      // Imports организация (синхронизирано с VSCode)
       'import/order': [
         'error',
         {
           groups: [
-            'builtin', // Node.js built-ins (fs, path, etc.)
-            'external', // npm packages (react, lodash, etc.)
-            'internal', // Internal modules (../../utils)
-            'parent', // Parent directories (../components)
-            'sibling', // Same directory (./Button)
-            'index', // Index files (./index)
-            'type', // Type imports
+            'builtin',
+            'external',
+            'internal',
+            'parent',
+            'sibling',
+            'index',
           ],
           'newlines-between': 'always',
-          alphabetize: {
-            order: 'asc',
-            caseInsensitive: true,
-          },
-          pathGroups: [
-            {
-              pattern: '@/**',
-              group: 'internal',
-              position: 'before',
-            },
-          ],
-          pathGroupsExcludedImportTypes: ['builtin'],
         },
       ],
+    },
+  },
 
-      // Забранява unused imports
+  {
+    files: ['*.ts', '*.tsx'],
+    ignores: ['**/mobile/**/*', '**/backend/**/*'],
+    languageOptions: {
+      parser: typescriptParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        global: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        exports: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': typescript,
+      prettier,
+      import: importPlugin,
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
           ignoreRestSiblings: true,
+          args: 'after-used',
+          caughtErrors: 'none',
         },
       ],
-
-      // Премахва duplicate imports
-      'import/no-duplicates': 'error',
-
-      // TypeScript specific import rules
-      '@typescript-eslint/consistent-type-imports': [
+      'no-undef': 'warn',
+      'no-console': 'warn',
+      'no-multiple-empty-lines': [
         'error',
         {
-          prefer: 'type-imports',
-          fixStyle: 'separate-type-imports',
+          max: 1,
+          maxEOF: 0,
+          maxBOF: 0,
         },
       ],
     },

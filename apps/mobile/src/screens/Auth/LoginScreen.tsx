@@ -10,7 +10,9 @@ import {
   Platform,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+
 import { useAuth } from '../../contexts/AuthContext';
+
 import { styles } from './styles';
 
 const LoginScreen = () => {
@@ -21,7 +23,7 @@ const LoginScreen = () => {
     if (error) {
       clearError();
     }
-  }, [email, password]);
+  }, [clearError, email, error, password]);
 
   useEffect(() => {
     if (error) {

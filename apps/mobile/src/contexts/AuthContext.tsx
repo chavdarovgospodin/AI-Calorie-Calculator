@@ -5,6 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
+
 import { authApi, type User } from '../services/api';
 
 interface AuthState {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text, View, ActivityIndicator } from 'react-native';
+
 import { styles } from './styles';
 
 const LoadingScreen = () => (
