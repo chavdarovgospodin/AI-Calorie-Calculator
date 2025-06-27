@@ -10,9 +10,9 @@ import {
 import Toast from 'react-native-toast-message';
 
 import { useAuth } from '../../contexts/AuthContext';
-import { dashboardApi, foodApi } from '../../services/api';
 
 import { styles } from './styles';
+import { dashboardApi, foodApi } from '@/services/dashboard';
 
 const HomeScreen = () => {
   const { user, logout } = useAuth();

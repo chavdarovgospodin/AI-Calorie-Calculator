@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { RegisterData, AuthResponse, User, ActivityLevel } from './interfaces';
+import { RegisterData, AuthResponse, User } from './interfaces';
 import { apiClient } from './api';
+import { ActivityLevel } from './enums';
 
 export const login = async (
   email: string,

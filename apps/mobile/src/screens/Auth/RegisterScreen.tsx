@@ -15,7 +15,7 @@ import { registerStyles as styles } from './styles';
 import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import { useAuth } from '@/contexts/AuthContext';
-import { Gender, Goal } from '@/services/interfaces';
+import { ActivityLevel, Gender, Goal } from '@/services/enums';
 
 interface RegisterFormData {
   email: string;
@@ -26,6 +26,7 @@ interface RegisterFormData {
   height: string | number;
   weight: string | number;
   goal: Goal;
+  activity_level: ActivityLevel;
 }
 
 const RegisterScreen: React.FC = () => {
@@ -38,6 +39,7 @@ const RegisterScreen: React.FC = () => {
     height: '',
     weight: '',
     goal: Goal.MAINTAIN_WEIGHT,
+    activity_level: ActivityLevel.MODERATELY_ACTIVE,
   });
   const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
@@ -142,6 +144,15 @@ const RegisterScreen: React.FC = () => {
       return;
     }
 
+    if (!formData.activity_level) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please select an activity level',
+      });
+      return;
+    }
+
     try {
       await register({
         ...formData,
@@ -149,6 +160,7 @@ const RegisterScreen: React.FC = () => {
         height: Number(formData.height),
         weight: Number(formData.weight),
         gender: formData.gender as Gender,
+        activity_level: formData.activity_level,
       });
       Toast.show({
         type: 'success',
@@ -246,6 +258,7 @@ const RegisterScreen: React.FC = () => {
                   styles.pickerContainer,
                   styles.pickerStyle,
                 ]}
+                mode="dropdown"
                 selectedValue={formData.gender}
                 onValueChange={itemValue =>
                   setFormData({ ...formData, gender: itemValue })
@@ -256,6 +269,7 @@ const RegisterScreen: React.FC = () => {
                 <Picker.Item label="Male" value="male" />
                 <Picker.Item label="Female" value="female" />
               </Picker>
+              <Text style={styles.dropdownIcon}>▼</Text>
             </View>
 
             <View style={styles.row}>
@@ -282,6 +296,51 @@ const RegisterScreen: React.FC = () => {
                   setFormData({ ...formData, weight: text })
                 }
               />
+            </View>
+
+            <Text style={[styles.sectionTitle, styles.sectionMargin]}>
+              Activity level
+            </Text>
+
+            <View style={[styles.input, styles.pickerContainer]}>
+              <View style={styles.picker}>
+                <Picker
+                  mode="dropdown"
+                  selectedValue={formData.activity_level}
+                  onValueChange={itemValue =>
+                    setFormData({ ...formData, activity_level: itemValue })
+                  }
+                  style={[styles.pickerStyle, { flex: 1 }]}
+                  itemStyle={styles.pickerText}
+                >
+                  <Picker.Item
+                    label="Activity Level"
+                    value=""
+                    enabled={false}
+                  />
+                  <Picker.Item
+                    label="Sedentary"
+                    value={ActivityLevel.SEDENTARY}
+                  />
+                  <Picker.Item
+                    label="Lightly Active"
+                    value={ActivityLevel.LIGHTLY_ACTIVE}
+                  />
+                  <Picker.Item
+                    label="Moderately Active"
+                    value={ActivityLevel.MODERATELY_ACTIVE}
+                  />
+                  <Picker.Item
+                    label="Very Active"
+                    value={ActivityLevel.VERY_ACTIVE}
+                  />
+                  <Picker.Item
+                    label="Extremely Active"
+                    value={ActivityLevel.EXTREMELY_ACTIVE}
+                  />
+                </Picker>
+                <Text style={styles.dropdownIcon}>▼</Text>
+              </View>
             </View>
 
             <Text style={[styles.sectionTitle, styles.sectionMargin]}>

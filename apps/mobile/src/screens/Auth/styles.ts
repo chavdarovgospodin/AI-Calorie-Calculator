@@ -241,4 +241,8 @@ export const registerStyles = StyleSheet.create({
     flex: 1,
     height: 50,
   },
+  dropdownIcon: {
+    fontSize: 12,
+    color: '#666',
+  },
 });

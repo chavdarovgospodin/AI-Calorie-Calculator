@@ -43,7 +43,6 @@ export class RegisterDto {
   @IsEnum(Goal, { message: 'Please select a valid goal' })
   goal: Goal;
 
-  @IsOptional()
   @IsEnum(ActivityLevel, { message: 'Please select a valid activity level' })
-  activity_level?: ActivityLevel;
+  activity_level: ActivityLevel;
 }
