@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { useAuthStatus } from '../../contexts/AuthContext';
 import LoadingScreen from '../LoadingScreen/LoadingScreen';
-import { HomeScreen, LoginScreen } from '../../screens';
+import { HomeScreen, LoginScreen, RegisterScreen } from '../../screens';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -13,11 +13,14 @@ export type RootStackParamList = {
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
 const AppNavigation = () => {
   const { isAuthenticated, isLoading } = useAuthStatus();
+
   if (isLoading) {
     return <LoadingScreen />;
   }
+
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -38,14 +41,24 @@ const AppNavigation = () => {
             options={{ title: '🍎 Calorie Tracker' }}
           />
         ) : (
-          <Stack.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{
-              title: 'Login',
-              headerShown: false,
-            }}
-          />
+          <>
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{
+                title: 'Login',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="Register"
+              component={RegisterScreen}
+              options={{
+                title: 'Register',
+                headerShown: false,
+              }}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

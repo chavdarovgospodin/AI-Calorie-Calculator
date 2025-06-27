@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-export const styles = StyleSheet.create({
+export const loginStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
@@ -76,21 +76,169 @@ export const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 14,
   },
-  testCredentials: {
-    marginTop: 32,
-    padding: 16,
-    backgroundColor: '#e3f2fd',
-    borderRadius: 8,
-    alignItems: 'center',
+});
+
+export const registerStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
   },
-  testTitle: {
+  scrollContainer: {
+    flexGrow: 1,
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+    paddingBottom: 40,
+  },
+  header: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 30,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#666',
+  },
+  form: {
+    width: '100%',
+    maxWidth: 400,
+    alignSelf: 'center',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 15,
+  },
+  sectionMargin: {
+    marginTop: 25,
+  },
+  input: {
+    backgroundColor: 'white',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 15,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  passwordContainer: {
+    position: 'relative',
+    marginBottom: 15,
+  },
+  passwordInput: {
+    marginBottom: 0,
+    paddingRight: 50,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 15,
+    top: 12,
+  },
+  eyeIcon: {
+    fontSize: 20,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  halfInput: {
+    width: '48%',
+  },
+  pickerContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    marginBottom: 15,
+  },
+  picker: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+  },
+  pickerText: {
+    fontSize: 16,
+    color: '#999',
+  },
+  pickerPlaceholder: {
+    fontSize: 16,
+    color: '#999',
+  },
+  goalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 30,
+  },
+  goalButton: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 15,
+    marginHorizontal: 5,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#ddd',
+  },
+  goalButtonActive: {
+    borderColor: '#4CAF50',
+    backgroundColor: '#f0f8f0',
+  },
+  goalEmoji: {
+    fontSize: 28,
+    marginBottom: 8,
+  },
+  goalEmojiActive: {
+    transform: [{ scale: 1.1 }],
+  },
+  goalText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1976d2',
+    color: '#666',
     marginBottom: 4,
   },
-  testText: {
+  goalTextActive: {
+    color: '#4CAF50',
+  },
+  goalSubtext: {
     fontSize: 12,
-    color: '#1976d2',
+    color: '#999',
+  },
+  goalSubtextActive: {
+    color: '#4CAF50',
+  },
+  submitButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  linkButton: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  linkText: {
+    color: '#2196F3',
+    fontSize: 16,
+  },
+  pickerStyle: {
+    flex: 1,
+    height: 50,
   },
 });

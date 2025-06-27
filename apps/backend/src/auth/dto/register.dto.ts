@@ -33,12 +33,12 @@ export class RegisterDto {
   @IsNumber({}, { message: 'Height must be a number' })
   @Min(100, { message: 'Height must be at least 100cm' })
   @Max(250, { message: 'Height must be less than 250cm' })
-  height: number; // in cm
+  height: number;
 
   @IsNumber({}, { message: 'Weight must be a number' })
   @Min(30, { message: 'Weight must be at least 30kg' })
   @Max(300, { message: 'Weight must be less than 300kg' })
-  weight: number; // in kg
+  weight: number;
 
   @IsEnum(Goal, { message: 'Please select a valid goal' })
   goal: Goal;

@@ -5,19 +5,40 @@
     "source.organizeImports": "never"
   },
   "typescript.preferences.organizeImports": false,
-  "eslint.workingDirectories": ["./apps/backend", "./apps/mobile", "."],
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
+  "eslint.workingDirectories": [
+    {
+      "directory": "./apps/backend",
+      "changeProcessCWD": true
+    },
+    {
+      "directory": "./apps/mobile",
+      "changeProcessCWD": true
+    },
+    {
+      "directory": ".",
+      "changeProcessCWD": true
+    }
   ],
+  "eslint.validate": ["javascript", "javascriptreact"],
+  "eslint.options": {
+    "overrideConfig": {
+      "ignorePatterns": ["apps/backend/**/*.ts"]
+    }
+  },
+  "eslint.rules.customizations": [
+    {
+      "rule": "@typescript-eslint/*",
+      "severity": "off",
+      "fixable": false
+    }
+  ],
+  "typescript.tsdk": "apps/backend/node_modules/typescript/lib",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit",
+      "source.fixAll.eslint": "never",
       "source.organizeImports": "never"
     }
   },

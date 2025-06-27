@@ -5,11 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import {
-  ActivityLevel,
-  Gender,
-  Goal,
-} from 'src/common/interfaces/user.interface';
+import { ActivityLevel } from 'src/common/interfaces/user.interface';
 import { calculateDailyCalories } from 'src/common/utils';
 import { SupabaseService } from 'src/database/supabase.service';
 
@@ -114,24 +110,29 @@ export class AuthService {
           email: loginDto.email,
           password: loginDto.password,
         });
+
       if (authError || !authData.user) {
         this.logger.warn(`Login failed for user: ${loginDto.email}`);
         throw new UnauthorizedException('Invalid email or password');
       }
-      // Get user profile
+
       const { data: userData, error: userError } =
         await this.supabaseService.client
           .from('users')
           .select('*')
           .eq('id', authData.user.id)
           .single();
+
       if (userError || !userData) {
         this.logger.error(`User profile not found: ${authData.user.id}`);
         throw new UnauthorizedException('User profile not found');
       }
+
       const payload = { email: authData.user.email, sub: authData.user.id };
       const access_token = this.jwtService.sign(payload);
+
       this.logger.log(`User logged in successfully: ${loginDto.email}`);
+
       return {
         access_token,
         user: userData,

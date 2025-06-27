@@ -21,7 +21,7 @@ export enum Goal {
   LOSE_WEIGHT = 'lose_weight',
   MAINTAIN_WEIGHT = 'maintain_weight',
   GAIN_WEIGHT = 'gain_weight',
-  BUILD_MUSCLE = 'build_muscle',
+  // BUILD_MUSCLE = 'build_muscle',
 }
 
 export enum ActivityLevel {

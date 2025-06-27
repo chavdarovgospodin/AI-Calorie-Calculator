@@ -13,12 +13,15 @@ import Toast from 'react-native-toast-message';
 
 import { useAuth } from '../../contexts/AuthContext';
 
-import { styles } from './styles';
+import { loginStyles as styles } from './styles';
+import { useNavigation } from '@react-navigation/native';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigation = useNavigation();
   const { login, isLoading, error, clearError } = useAuth();
+
   useEffect(() => {
     if (error) {
       clearError();
@@ -70,10 +73,11 @@ const LoginScreen = () => {
         text1: 'Welcome!',
         text2: 'Login successful',
       });
-    } catch (error) {
-      console.log('Login error handled by context');
+    } catch (err) {
+      console.log('Login error handled by context', err);
     }
   };
+
   const handleForgotPassword = () => {
     Alert.alert(
       'Forgot Password',
@@ -81,11 +85,11 @@ const LoginScreen = () => {
       [{ text: 'OK' }]
     );
   };
+
   const handleRegister = () => {
-    Alert.alert('Register', 'Registration screen coming soon!', [
-      { text: 'OK' },
-    ]);
+    navigation.navigate('Register');
   };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -150,14 +154,9 @@ const LoginScreen = () => {
             <Text style={styles.linkText}>Don't have an account? Register</Text>
           </TouchableOpacity>
         </View>
-
-        <View style={styles.testCredentials}>
-          <Text style={styles.testTitle}>Quick Test:</Text>
-          <Text style={styles.testText}>Email: test@example.com</Text>
-          <Text style={styles.testText}>Password: any password</Text>
-        </View>
       </View>
     </KeyboardAvoidingView>
   );
 };
+
 export default LoginScreen;
