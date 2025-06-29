@@ -9,6 +9,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActivity } from '@/contexts/ActivityContext';
 import { getUserProfile, UserProfile } from '@/services/users';
@@ -17,7 +18,7 @@ import { styles } from './styles';
 const UserSettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
-  const { selectedApp, disconnect } = useActivity();
+  const { selectedApp, disconnectHealthApp } = useActivity();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -39,6 +40,35 @@ const UserSettingsScreen: React.FC = () => {
 
   const handleChangeHealthApp = () => {
     navigation.navigate('HealthAppSelection');
+  };
+
+  const handleDisconnectHealthApp = () => {
+    if (!selectedApp) return;
+
+    Alert.alert(
+      'Disconnect Health App',
+      `Are you sure you want to disconnect from ${formatHealthApp(selectedApp)}? You can always reconnect later.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Disconnect',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await disconnectHealthApp();
+              Alert.alert('Success', 'Health app disconnected successfully');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to disconnect health app');
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleEditProfile = () => {
+    navigation.navigate('EditProfile'); // Uncomment when EditProfile is implemented
   };
 
   const handleLogout = async () => {
@@ -80,11 +110,48 @@ const UserSettingsScreen: React.FC = () => {
       .join(' ');
   };
 
+  const calculateAge = () => {
+    if (!profile?.age) return 'N/A';
+    return `${profile.age} години`;
+  };
+
+  const getBMI = () => {
+    if (!profile?.height || !profile?.weight) return 'N/A';
+    const heightInMeters = profile.height / 100;
+    const bmi = profile.weight / (heightInMeters * heightInMeters);
+    return bmi.toFixed(1);
+  };
+
+  const getBMICategory = () => {
+    const bmi = getBMI();
+    if (bmi === 'N/A') return '';
+    const bmiValue = parseFloat(bmi);
+
+    if (bmiValue < 18.5) return '(Underweight)';
+    if (bmiValue < 25) return '(Normal)';
+    if (bmiValue < 30) return '(Overweight)';
+    return '(Obese)';
+  };
+
+  const getBMIColor = () => {
+    const bmi = getBMI();
+    if (bmi === 'N/A') return '#666';
+    const bmiValue = parseFloat(bmi);
+
+    if (bmiValue < 18.5) return '#FF9500';
+    if (bmiValue < 25) return '#34C759';
+    if (bmiValue < 30) return '#FF9500';
+    return '#FF3B30';
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={{ marginTop: 10, color: '#666' }}>
+            Loading profile...
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -95,22 +162,31 @@ const UserSettingsScreen: React.FC = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* User Info Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>User Information</Text>
+          <Text style={styles.sectionTitle}>
+            <Ionicons name="person-outline" size={20} color="#007AFF" /> User
+            Information
+          </Text>
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>{profile?.email || 'N/A'}</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Age</Text>
+              <Text style={styles.infoLabel}>
+                <Ionicons name="mail-outline" size={16} color="#666" /> Email
+              </Text>
               <Text style={styles.infoValue}>
-                {profile?.age || 'N/A'} years
+                {profile?.email || user?.email || 'N/A'}
               </Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Gender</Text>
+              <Text style={styles.infoLabel}>
+                <Ionicons name="calendar-outline" size={16} color="#666" /> Age
+              </Text>
+              <Text style={styles.infoValue}>{calculateAge()}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>
+                <Ionicons name="person-outline" size={16} color="#666" /> Gender
+              </Text>
               <Text style={styles.infoValue}>
                 {profile?.gender
                   ? profile.gender.charAt(0).toUpperCase() +
@@ -120,16 +196,29 @@ const UserSettingsScreen: React.FC = () => {
             </View>
             <View style={styles.divider} />
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Height</Text>
+              <Text style={styles.infoLabel}>
+                <Ionicons name="resize-outline" size={16} color="#666" /> Height
+              </Text>
               <Text style={styles.infoValue}>
                 {profile?.height || 'N/A'} cm
               </Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Weight</Text>
+              <Text style={styles.infoLabel}>
+                <Ionicons name="scale-outline" size={16} color="#666" /> Weight
+              </Text>
               <Text style={styles.infoValue}>
                 {profile?.weight || 'N/A'} kg
+              </Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>
+                <Ionicons name="analytics-outline" size={16} color="#666" /> BMI
+              </Text>
+              <Text style={[styles.infoValue, { color: getBMIColor() }]}>
+                {getBMI()} {getBMICategory()}
               </Text>
             </View>
           </View>
@@ -137,17 +226,25 @@ const UserSettingsScreen: React.FC = () => {
 
         {/* Goals Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Goals</Text>
+          <Text style={styles.sectionTitle}>
+            <Ionicons name="at-outline" size={20} color="#007AFF" /> Goals
+          </Text>
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Current Goal</Text>
+              <Text style={styles.infoLabel}>
+                <Ionicons name="flag-outline" size={16} color="#666" /> Current
+                Goal
+              </Text>
               <Text style={styles.infoValue}>
                 {profile?.goal ? getGoalText(profile.goal) : 'N/A'}
               </Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Daily Calorie Target</Text>
+              <Text style={styles.infoLabel}>
+                <Ionicons name="flame-outline" size={16} color="#666" /> Daily
+                Calorie Target
+              </Text>
               <Text style={styles.infoValue}>
                 {profile?.calorie_goal || 'N/A'} cal
               </Text>
@@ -157,21 +254,52 @@ const UserSettingsScreen: React.FC = () => {
 
         {/* Health App Integration Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Activity Tracking</Text>
+          <Text style={styles.sectionTitle}>
+            <Ionicons name="fitness-outline" size={20} color="#007AFF" />{' '}
+            Activity Tracking
+          </Text>
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Connected App</Text>
+              <Text style={styles.infoLabel}>
+                <Ionicons
+                  name="phone-portrait-outline"
+                  size={16}
+                  color="#666"
+                />{' '}
+                Connected App
+              </Text>
               <Text style={styles.infoValue}>
                 {formatHealthApp(selectedApp)}
               </Text>
             </View>
-            <TouchableOpacity
-              style={styles.changeButton}
-              onPress={handleChangeHealthApp}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.changeButtonText}>Change Health App</Text>
-            </TouchableOpacity>
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={styles.changeButton}
+                onPress={handleChangeHealthApp}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="swap-horizontal-outline"
+                  size={18}
+                  color="#fff"
+                />
+                <Text style={styles.changeButtonText}>
+                  {selectedApp ? 'Change App' : 'Connect App'}
+                </Text>
+              </TouchableOpacity>
+
+              {selectedApp && (
+                <TouchableOpacity
+                  style={styles.disconnectButton}
+                  onPress={handleDisconnectHealthApp}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="unlink-outline" size={18} color="#ff6b6b" />
+                  <Text style={styles.disconnectButtonText}>Disconnect</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
 
@@ -179,9 +307,10 @@ const UserSettingsScreen: React.FC = () => {
         <View style={styles.section}>
           <TouchableOpacity
             style={styles.editProfileButton}
-            onPress={() => navigation.navigate('EditProfile')}
+            onPress={handleEditProfile}
             activeOpacity={0.7}
           >
+            <Ionicons name="create-outline" size={20} color="#fff" />
             <Text style={styles.editProfileButtonText}>Edit Profile</Text>
           </TouchableOpacity>
 
@@ -190,6 +319,7 @@ const UserSettingsScreen: React.FC = () => {
             onPress={handleLogout}
             activeOpacity={0.7}
           >
+            <Ionicons name="log-out-outline" size={20} color="#ff4757" />
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
         </View>

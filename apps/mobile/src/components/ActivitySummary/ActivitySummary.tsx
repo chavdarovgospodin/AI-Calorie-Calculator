@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useActivity } from '@/contexts/ActivityContext';
 import { styles } from './styles';
@@ -92,7 +93,7 @@ const ActivitySummary: React.FC<ActivitySummaryProps> = ({
     return (
       <View style={styles.container}>
         <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>🏃‍♂️</Text>
+          <Ionicons name="walk-outline" size={60} color="#007AFF" />
           <Text style={styles.emptyTitle}>Track Your Activity</Text>
           <Text style={styles.emptySubtitle}>
             Connect a health app to automatically track your calories burned
@@ -101,12 +102,24 @@ const ActivitySummary: React.FC<ActivitySummaryProps> = ({
             style={styles.connectButton}
             onPress={handleConnectApp}
           >
+            <Ionicons
+              name="link-outline"
+              size={18}
+              color="#fff"
+              style={{ marginRight: 8 }}
+            />
             <Text style={styles.connectButtonText}>Connect Health App</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.manualButton}
             onPress={handleManualEntry}
           >
+            <Ionicons
+              name="create-outline"
+              size={18}
+              color="#007AFF"
+              style={{ marginRight: 8 }}
+            />
             <Text style={styles.manualButtonText}>Log Activity Manually</Text>
           </TouchableOpacity>
         </View>
@@ -134,7 +147,7 @@ const ActivitySummary: React.FC<ActivitySummaryProps> = ({
         <>
           <View style={styles.mainStats}>
             <View style={styles.statCard}>
-              <Text style={styles.statIcon}>🔥</Text>
+              <Ionicons name="flame-outline" size={28} color="#FF6B35" />
               <Text style={styles.statValue}>
                 {summary?.totalCaloriesBurned || 0}
               </Text>
@@ -142,7 +155,7 @@ const ActivitySummary: React.FC<ActivitySummaryProps> = ({
             </View>
 
             <View style={styles.statCard}>
-              <Text style={styles.statIcon}>👟</Text>
+              <Ionicons name="footsteps-outline" size={28} color="#007AFF" />
               <Text style={styles.statValue}>
                 {summary?.totalSteps?.toLocaleString() || '0'}
               </Text>
@@ -150,7 +163,7 @@ const ActivitySummary: React.FC<ActivitySummaryProps> = ({
             </View>
 
             <View style={styles.statCard}>
-              <Text style={styles.statIcon}>📍</Text>
+              <Ionicons name="location-outline" size={28} color="#34C759" />
               <Text style={styles.statValue}>
                 {summary?.totalDistance
                   ? formatDistance(summary.totalDistance)
@@ -162,39 +175,38 @@ const ActivitySummary: React.FC<ActivitySummaryProps> = ({
 
           {summary?.activities && summary.activities.length > 0 && (
             <View style={styles.activitiesSection}>
-              <Text style={styles.sectionTitle}>Activity Breakdown</Text>
-              {summary.activities.map((activity: any, index: number) => (
-                <View key={index} style={styles.activityItem}>
-                  <View style={styles.activityInfo}>
-                    <Text style={styles.activityType}>
-                      {activity.activityType || 'General Activity'}
-                    </Text>
-                    {activity.duration && (
-                      <Text style={styles.activityDuration}>
-                        {activity.duration} min
+              <Text style={styles.sectionTitle}>Recent Activities</Text>
+              {summary.activities
+                .slice(0, 3)
+                .map((activity: any, index: number) => (
+                  <View key={index} style={styles.activityItem}>
+                    <View style={styles.activityInfo}>
+                      <Text style={styles.activityName}>{activity.type}</Text>
+                      <Text style={styles.activityDetails}>
+                        {activity.duration} min • {activity.calories} cal
                       </Text>
-                    )}
+                    </View>
+                    <Text style={styles.activityTime}>
+                      {new Date(activity.startTime).toLocaleTimeString(
+                        'en-US',
+                        {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        }
+                      )}
+                    </Text>
                   </View>
-                  <Text style={styles.activityCalories}>
-                    {activity.caloriesBurned} cal
-                  </Text>
-                </View>
-              ))}
+                ))}
             </View>
           )}
 
           <TouchableOpacity
-            style={styles.addActivityButton}
+            style={styles.manualEntryButton}
             onPress={handleManualEntry}
           >
-            <Text style={styles.addActivityText}>+ Add Manual Activity</Text>
+            <Ionicons name="add-circle-outline" size={20} color="#007AFF" />
+            <Text style={styles.manualEntryText}>Add Manual Activity</Text>
           </TouchableOpacity>
-
-          {summary?.lastSync && (
-            <Text style={styles.lastSync}>
-              Last synced: {new Date(summary.lastSync).toLocaleTimeString()}
-            </Text>
-          )}
         </>
       )}
     </ScrollView>

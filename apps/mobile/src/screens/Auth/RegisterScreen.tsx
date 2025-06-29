@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { RegisterData } from '@/services/interfaces';
 import { ActivityLevel, Gender, Goal } from '@/services/enums';
@@ -137,6 +138,7 @@ const RegisterScreen: React.FC = () => {
 
   const GoalOption = ({
     icon,
+    iconName,
     title,
     subtitle,
     selected,
@@ -144,6 +146,7 @@ const RegisterScreen: React.FC = () => {
   }: {
     goal: string;
     icon: string;
+    iconName: keyof typeof Ionicons.glyphMap;
     title: string;
     subtitle: string;
     selected: boolean;
@@ -154,7 +157,12 @@ const RegisterScreen: React.FC = () => {
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <Text style={styles.goalIcon}>{icon}</Text>
+      <Ionicons
+        name={iconName}
+        size={32}
+        color={selected ? '#007AFF' : '#666'}
+        style={{ marginBottom: 8 }}
+      />
       <Text style={[styles.goalTitle, selected && styles.goalTitleSelected]}>
         {title}
       </Text>
@@ -175,8 +183,6 @@ const RegisterScreen: React.FC = () => {
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
         >
           <View style={styles.header}>
             <Text style={styles.logo}>🍎</Text>
@@ -186,7 +192,7 @@ const RegisterScreen: React.FC = () => {
 
           <View style={styles.formContainer}>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Account Information</Text>
+              <Text style={styles.sectionTitle}>Account Details</Text>
 
               <View style={styles.inputGroup}>
                 <TextInput
@@ -198,7 +204,6 @@ const RegisterScreen: React.FC = () => {
                   placeholderTextColor="#999"
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  autoCorrect={false}
                   value={formData.email}
                   onChangeText={text => {
                     setFormData({ ...formData, email: text });
@@ -238,9 +243,11 @@ const RegisterScreen: React.FC = () => {
                     style={styles.eyeIcon}
                     onPress={() => setShowPassword(!showPassword)}
                   >
-                    <Text style={styles.eyeText}>
-                      {showPassword ? '🙈' : '👁️'}
-                    </Text>
+                    <Ionicons
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color="#666"
+                    />
                   </TouchableOpacity>
                 </View>
                 {validationErrors.password && (
@@ -276,9 +283,13 @@ const RegisterScreen: React.FC = () => {
                     style={styles.eyeIcon}
                     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    <Text style={styles.eyeText}>
-                      {showConfirmPassword ? '🙈' : '👁️'}
-                    </Text>
+                    <Ionicons
+                      name={
+                        showConfirmPassword ? 'eye-off-outline' : 'eye-outline'
+                      }
+                      size={20}
+                      color="#666"
+                    />
                   </TouchableOpacity>
                 </View>
                 {validationErrors.confirmPassword && (
@@ -382,10 +393,7 @@ const RegisterScreen: React.FC = () => {
                   )}
                 </View>
               </View>
-            </View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Activity Level</Text>
               <View style={styles.pickerContainer}>
                 <Picker
                   selectedValue={formData.activity_level}
@@ -424,6 +432,7 @@ const RegisterScreen: React.FC = () => {
                 <GoalOption
                   goal="lose"
                   icon="🔥"
+                  iconName="flame-outline"
                   title="Lose Weight"
                   subtitle="Burn calories"
                   selected={formData.goal === Goal.LOSE_WEIGHT}
@@ -434,6 +443,7 @@ const RegisterScreen: React.FC = () => {
                 <GoalOption
                   goal="maintain"
                   icon="⚖️"
+                  iconName="scale-outline"
                   title="Maintain"
                   subtitle="Stay healthy"
                   selected={formData.goal === Goal.MAINTAIN_WEIGHT}
@@ -444,6 +454,7 @@ const RegisterScreen: React.FC = () => {
                 <GoalOption
                   goal="gain"
                   icon="💪"
+                  iconName="barbell-outline"
                   title="Gain Muscle"
                   subtitle="Build strength"
                   selected={formData.goal === Goal.GAIN_WEIGHT}

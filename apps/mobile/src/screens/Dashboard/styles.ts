@@ -115,12 +115,12 @@ export const styles = StyleSheet.create({
     elevation: 5,
   },
   addFoodIcon: {
-    fontSize: 24,
     marginRight: 10,
   },
   addFoodText: {
     color: 'white',
     fontSize: 18,
     fontWeight: '600',
+    marginLeft: 8,
   },
 });

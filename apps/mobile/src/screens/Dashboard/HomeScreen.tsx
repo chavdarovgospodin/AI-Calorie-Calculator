@@ -7,6 +7,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '@/contexts/AuthContext';
 import ActivitySummary from '@/components/ActivitySummary/ActivitySummary';
@@ -126,7 +127,7 @@ const HomeScreen: React.FC = () => {
       <ActivitySummary onRefresh={loadDashboard} />
 
       <TouchableOpacity style={styles.addFoodButton} onPress={handleFoodInput}>
-        <Text style={styles.addFoodIcon}>🍽️</Text>
+        <Ionicons name="restaurant-outline" size={24} color="#fff" />
         <Text style={styles.addFoodText}>Add Food</Text>
       </TouchableOpacity>
     </ScrollView>

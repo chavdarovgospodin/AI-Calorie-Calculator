@@ -1,62 +1,121 @@
+// apps/mobile/src/components/ActivitySummary/styles.ts
+// Обновени стилове за да поддържат иконите
+
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: 'white',
-    marginBottom: 10,
+    margin: 20,
+    marginTop: 10,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  connectButton: {
+    backgroundColor: '#007AFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 12,
+    minWidth: 200,
+  },
+  connectButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  manualButton: {
+    backgroundColor: 'transparent',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    minWidth: 200,
+  },
+  manualButtonText: {
+    color: '#007AFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 20,
     paddingBottom: 10,
   },
   title: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
   source: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
-    marginTop: 4,
+    fontStyle: 'italic',
   },
   loader: {
-    marginTop: 50,
+    padding: 20,
   },
   mainStats: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    padding: 20,
   },
   statCard: {
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-    padding: 15,
-    borderRadius: 12,
     flex: 1,
-    marginHorizontal: 5,
-  },
-  statIcon: {
-    fontSize: 28,
-    marginBottom: 8,
   },
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+    marginTop: 8,
+    marginBottom: 4,
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
-    marginTop: 4,
+    textAlign: 'center',
   },
   activitiesSection: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    padding: 20,
+    paddingTop: 0,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
     marginBottom: 12,
@@ -72,79 +131,36 @@ export const styles = StyleSheet.create({
   activityInfo: {
     flex: 1,
   },
-  activityType: {
+  activityName: {
     fontSize: 16,
+    fontWeight: '500',
     color: '#333',
+    marginBottom: 2,
   },
-  activityDuration: {
+  activityDetails: {
     fontSize: 14,
     color: '#666',
-    marginTop: 2,
   },
-  activityCalories: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#007AFF',
-  },
-  addActivityButton: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#007AFF',
-    borderRadius: 8,
-    borderStyle: 'dashed',
-  },
-  addActivityText: {
-    color: '#007AFF',
-    fontSize: 16,
-  },
-  lastSync: {
-    textAlign: 'center',
+  activityTime: {
     fontSize: 12,
     color: '#999',
-    marginBottom: 20,
   },
-  emptyState: {
+  manualEntryButton: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 40,
+    padding: 16,
+    margin: 20,
+    marginTop: 0,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
   },
-  emptyIcon: {
-    fontSize: 60,
-    marginBottom: 20,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  connectButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 25,
-    marginBottom: 15,
-  },
-  connectButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  manualButton: {
-    paddingVertical: 10,
-  },
-  manualButtonText: {
+  manualEntryText: {
     color: '#007AFF',
     fontSize: 16,
-    textDecorationLine: 'underline',
+    fontWeight: '500',
+    marginLeft: 8,
   },
 });

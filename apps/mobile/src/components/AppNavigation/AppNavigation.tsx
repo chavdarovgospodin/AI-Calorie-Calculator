@@ -1,12 +1,24 @@
+import React from 'react';
+import { TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationProp,
+} from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useAuthStatus } from '../../contexts/AuthContext';
 import { useActivity } from '../../contexts/ActivityContext';
 import LoadingScreen from '../LoadingScreen/LoadingScreen';
-import { HomeScreen, LoginScreen, RegisterScreen } from '../../screens';
+import {
+  EditProfileScreen,
+  HomeScreen,
+  LoginScreen,
+  RegisterScreen,
+} from '../../screens';
 import HealthAppSelectionScreen from '../../screens/HealthAppSelection/HealthAppSelectionScreen';
 import ManualActivityScreen from '../../screens/ManualActivity/ManualActivityScreen';
+import UserSettingsScreen from '../../screens/Settings/UserSettingsScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -15,7 +27,13 @@ export type RootStackParamList = {
   FoodAnalysis: undefined;
   HealthAppSelection: undefined;
   ManualActivity: undefined;
+  UserSettings: undefined;
+  EditProfile: undefined;
 };
+type HomeScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Home'
+>;
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -58,7 +76,25 @@ const AppNavigation = () => {
               <Stack.Screen
                 name="Home"
                 component={HomeScreen}
-                options={{ title: '🍎 Calorie Tracker' }}
+                options={({ navigation }: HomeScreenNavigationProp) => ({
+                  title: '🍎 Calorie Tracker',
+                  headerRight: () => (
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('UserSettings')}
+                      style={{
+                        marginRight: 10,
+                        padding: 8,
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name="settings-outline"
+                        size={24}
+                        color="#fff"
+                      />
+                    </TouchableOpacity>
+                  ),
+                })}
               />
             )}
             {!needsHealthAppSetup && (
@@ -77,6 +113,24 @@ const AppNavigation = () => {
                   component={ManualActivityScreen}
                   options={{
                     title: 'Log Activity',
+                    headerShown: true,
+                  }}
+                />
+
+                <Stack.Screen
+                  name="UserSettings"
+                  component={UserSettingsScreen}
+                  options={{
+                    title: 'Settings',
+                    headerShown: true,
+                  }}
+                />
+
+                <Stack.Screen
+                  name="EditProfile"
+                  component={EditProfileScreen}
+                  options={{
+                    title: 'Edit Profile',
                     headerShown: true,
                   }}
                 />

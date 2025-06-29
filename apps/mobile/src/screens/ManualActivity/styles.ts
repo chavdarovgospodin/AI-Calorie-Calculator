@@ -16,6 +16,8 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   activityPicker: {
     flexDirection: 'row',
@@ -29,13 +31,23 @@ export const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  activityIcon: {
-    fontSize: 24,
-    marginRight: 10,
-  },
   picker: {
     flex: 1,
     height: 50,
+  },
+  inputContainer: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: 15,
+    zIndex: 1,
+  },
+  textAreaIcon: {
+    top: 12,
+    alignSelf: 'flex-start',
   },
   input: {
     backgroundColor: 'white',
@@ -48,15 +60,22 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+    flex: 1,
+  },
+  inputWithIcon: {
+    paddingLeft: 45,
   },
   textArea: {
     minHeight: 80,
     paddingTop: 12,
+    textAlignVertical: 'top',
   },
   hint: {
     fontSize: 14,
     color: '#666',
     marginTop: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   intensityContainer: {
     flexDirection: 'row',
@@ -65,7 +84,8 @@ export const styles = StyleSheet.create({
   intensityButton: {
     flex: 1,
     backgroundColor: 'white',
-    paddingVertical: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
     borderRadius: 10,
     alignItems: 'center',
     shadowColor: '#000',
@@ -73,12 +93,16 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   intensityButtonActive: {
     backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
   },
   intensityText: {
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: '500',
     color: '#333',
   },
   intensityTextActive: {
@@ -87,10 +111,18 @@ export const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: '#007AFF',
-    paddingVertical: 15,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     borderRadius: 25,
     alignItems: 'center',
     marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   submitButtonDisabled: {
     opacity: 0.6,
