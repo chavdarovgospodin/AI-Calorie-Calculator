@@ -1,0 +1,53 @@
+# .github/workflows/minimal.yml (За тестване)
+name: 🚀 Minimal Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: ✅ Quick Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          # БЕЗ cache за да избегнем грешката
+
+      - name: 📋 Check Files
+        run: |
+          echo "🔍 Repository structure:"
+          ls -la
+          echo ""
+          echo "📁 Apps directory:"
+          ls -la apps/ || echo "No apps directory"
+          echo ""
+          echo "📦 Backend:"
+          ls -la apps/backend/ || echo "No backend directory"
+          echo ""
+          echo "📱 Mobile:"
+          ls -la apps/mobile/ || echo "No mobile directory"
+
+      - name: 📦 Install Backend Dependencies (if exists)
+        run: |
+          if [ -d "apps/backend" ] && [ -f "apps/backend/package.json" ]; then
+            echo "📦 Installing backend dependencies..."
+            cd apps/backend
+            npm install --production
+            echo "✅ Backend dependencies installed"
+          else
+            echo "⚠️ No backend package.json found"
+          fi
+
+      - name: 🎉 Success
+        run: |
+          echo "✅ Minimal test completed successfully!"
+          echo "🚀 Ready for development"
