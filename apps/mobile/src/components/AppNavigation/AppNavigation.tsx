@@ -107,7 +107,7 @@ const AppNavigation = () => {
                   name="FoodInput"
                   component={FoodInputScreen}
                   options={{
-                    title: 'Добави храна',
+                    title: 'Add meal',
                     headerShown: true,
                   }}
                 />
@@ -116,7 +116,7 @@ const AppNavigation = () => {
                   name="Activity"
                   component={ActivityScreen}
                   options={{
-                    title: 'Активност',
+                    title: 'Activity',
                     headerShown: true,
                   }}
                 />

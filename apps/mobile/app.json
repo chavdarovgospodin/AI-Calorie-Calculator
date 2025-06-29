@@ -18,7 +18,9 @@
         "NSHealthShareUsageDescription": "Приложението има нужда от достъп до вашите здравни данни, за да следи изгорените калории и физическата активност",
         "NSHealthUpdateUsageDescription": "Приложението има нужда от достъп за актуализиране на вашите здравни данни",
         "NSMotionUsageDescription": "Приложението използва данни за движение, за да следи физическата ви активност",
-        "NSLocationWhenInUseUsageDescription": "Приложението има нужда от локация за проследяване на активности на открито"
+        "NSLocationWhenInUseUsageDescription": "Приложението има нужда от локация за проследяване на активности на открито",
+        "NSPhotoLibraryUsageDescription": "Приложението има нужда от достъп до вашата фото библиотека, за да изберете снимки",
+        "NSCameraUsageDescription": "Приложението има нужда от достъп до камерата, за да правите снимки"
       }
     },
     "android": {
@@ -32,7 +34,9 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "BODY_SENSORS",
-        "INTERNET"
+        "INTERNET",
+        "CAMERA",
+        "MEDIA_LIBRARY"
       ]
     },
     "web": {

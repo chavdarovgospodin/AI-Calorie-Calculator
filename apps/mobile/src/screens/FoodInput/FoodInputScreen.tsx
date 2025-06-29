@@ -54,8 +54,8 @@ const FoodInputScreen: React.FC = () => {
 
     setIsAnalyzing(true);
     try {
-      const result = await analyzeFood(textInput);
-      setAnalysisResult(result);
+      // const result = await analyzeFood(textInput);
+      // setAnalysisResult(result);
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -120,8 +120,8 @@ const FoodInputScreen: React.FC = () => {
   const analyzeImage = async (base64: string) => {
     setIsAnalyzing(true);
     try {
-      const result = await analyzeFoodImage(base64);
-      setAnalysisResult(result);
+      // const result = await analyzeFoodImage(base64);
+      // setAnalysisResult(result);
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -147,13 +147,13 @@ const FoodInputScreen: React.FC = () => {
           onPress: async () => {
             setIsSaving(true);
             try {
-              await saveFoodEntry({
-                foods: analysisResult.foods,
-                totalCalories: analysisResult.totalCalories,
-                protein: analysisResult.protein,
-                carbs: analysisResult.carbs,
-                fat: analysisResult.fat,
-              });
+              // await saveFoodEntry({
+              //   foods: analysisResult.foods,
+              //   totalCalories: analysisResult.totalCalories,
+              //   protein: analysisResult.protein,
+              //   carbs: analysisResult.carbs,
+              //   fat: analysisResult.fat,
+              // });
 
               Toast.show({
                 type: 'success',
