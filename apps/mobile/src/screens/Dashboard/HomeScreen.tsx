@@ -1,4 +1,3 @@
-// apps/mobile/src/screens/Dashboard/HomeScreen.tsx
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -23,7 +22,7 @@ export interface DailyDashboard {
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [dashboard, setDashboard] = useState<DailyDashboard | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -116,21 +115,6 @@ const HomeScreen: React.FC = () => {
         </Text>
       </View>
 
-      {/* Quick Stats */}
-      {/* <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Ionicons name="flame-outline" size={24} color="#FF6B35" />
-          <Text style={styles.statValue}>{dashboard?.caloriesBurned || 0}</Text>
-          <Text style={styles.statLabel}>Изгорени</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Ionicons name="restaurant-outline" size={24} color="#4CAF50" />
-          <Text style={styles.statValue}>{getNetCalories()}</Text>
-          <Text style={styles.statLabel}>Нетни</Text>
-        </View>
-      </View> */}
-
       {/* Prominent Add Food Button */}
       <TouchableOpacity style={styles.addFoodButton} onPress={handleFoodInput}>
         <View style={styles.addFoodButtonContent}>
@@ -140,6 +124,13 @@ const HomeScreen: React.FC = () => {
             <Text style={styles.addFoodSubtitle}>Снимай или опиши</Text>
           </View>
         </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.addFoodButton}
+        onPress={() => navigation.navigate('HealthAppSelection')}
+      >
+        <Text>Health Apps</Text>
       </TouchableOpacity>
 
       {/* Activity Summary Button */}
