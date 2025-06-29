@@ -1,323 +1,399 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
+  ScrollView,
+  Alert,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
+  SafeAreaView,
 } from 'react-native';
-
-import Toast from 'react-native-toast-message';
+import { Picker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '@/contexts/AuthContext';
+import { RegisterData } from '@/services/interfaces';
+import { ActivityLevel, Gender, Goal } from '@/services/enums';
 
 import { registerStyles as styles } from './styles';
-import { useNavigation } from '@react-navigation/native';
-import { Picker } from '@react-native-picker/picker';
-import { useAuth } from '@/contexts/AuthContext';
-import { ActivityLevel, Gender, Goal } from '@/services/enums';
 
 interface RegisterFormData {
   email: string;
   password: string;
   confirmPassword: string;
-  age: string | number;
-  gender: Gender | '';
-  height: string | number;
-  weight: string | number;
-  goal: Goal;
+  age: string;
+  gender: Gender;
+  height: string;
+  weight: string;
   activity_level: ActivityLevel;
+  goal: Goal;
 }
 
 const RegisterScreen: React.FC = () => {
+  const navigation = useNavigation();
+  const { register, isLoading, error, clearError } = useAuth();
+
   const [formData, setFormData] = useState<RegisterFormData>({
     email: '',
     password: '',
     confirmPassword: '',
     age: '',
-    gender: '',
+    gender: Gender.MALE,
     height: '',
     weight: '',
+    activity_level: ActivityLevel.SEDENTARY,
     goal: Goal.MAINTAIN_WEIGHT,
-    activity_level: ActivityLevel.MODERATELY_ACTIVE,
   });
+
   const [showPassword, setShowPassword] = useState(false);
-  const navigation = useNavigation();
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
-  const { register, isLoading, error, clearError } = useAuth();
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
 
-  useEffect(() => {
-    if (error) {
-      clearError();
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Please enter a valid email';
     }
-  }, [clearError, formData, error]);
 
-  useEffect(() => {
-    if (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Login Failed',
-        text2: error,
-        position: 'top',
-      });
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
     }
-  }, [error]);
 
-  const handleLoginNavigate = () => {
-    navigation.navigate('Login');
+    if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    const age = parseInt(formData.age);
+    if (!formData.age || isNaN(age) || age < 13 || age > 120) {
+      errors.age = 'Please enter a valid age (13-120)';
+    }
+
+    const height = parseFloat(formData.height);
+    if (!formData.height || isNaN(height) || height < 100 || height > 250) {
+      errors.height = 'Please enter a valid height (100-250 cm)';
+    }
+
+    const weight = parseFloat(formData.weight);
+    if (!formData.weight || isNaN(weight) || weight < 30 || weight > 300) {
+      errors.weight = 'Please enter a valid weight (30-300 kg)';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleRegister = async () => {
-    if (!formData.email || !formData.password) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Please enter your email',
-      });
-      return;
-    }
+    clearError();
 
-    if (formData.password.length < 6 && !formData.password.trim()) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Please enter your password',
-      });
-      return;
-    }
-
-    const ageNum = Number(formData.age);
-    if (!formData.age || isNaN(ageNum) || ageNum < 13 || ageNum > 120) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Age must be between 13 and 120',
-      });
-      return;
-    }
-
-    const heightNum = Number(formData.height);
-    if (
-      !formData.height ||
-      isNaN(heightNum) ||
-      heightNum < 100 ||
-      heightNum > 250
-    ) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Height must be between 100cm and 250cm',
-      });
-      return;
-    }
-
-    const weightNum = Number(formData.weight);
-    if (
-      !formData.weight ||
-      isNaN(weightNum) ||
-      weightNum < 30 ||
-      weightNum > 300
-    ) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Weight must be between 30kg and 300kg',
-      });
-      return;
-    }
-
-    if (!formData.gender) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Please select a gender',
-      });
-      return;
-    }
-
-    if (!formData.goal) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Please select a goal',
-      });
-      return;
-    }
-
-    if (!formData.activity_level) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Please select an activity level',
-      });
+    if (!validateForm()) {
       return;
     }
 
     try {
-      await register({
-        ...formData,
-        age: Number(formData.age),
-        height: Number(formData.height),
-        weight: Number(formData.weight),
-        gender: formData.gender as Gender,
+      const registerData: RegisterData = {
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        age: parseInt(formData.age),
+        gender: formData.gender,
+        height: parseFloat(formData.height),
+        weight: parseFloat(formData.weight),
         activity_level: formData.activity_level,
-      });
-      Toast.show({
-        type: 'success',
-        text1: 'Welcome!',
-        text2: 'Registration successful',
-      });
-    } catch (err) {
-      console.log('Registration error handled by context', err);
+        goal: formData.goal,
+      };
+
+      await register(registerData);
+
+      Alert.alert(
+        'Success!',
+        'Account created successfully. Welcome to your fitness journey!',
+        [{ text: 'OK', onPress: () => navigation.navigate('Dashboard') }]
+      );
+    } catch (error) {
+      console.error('Registration error:', error);
+      Alert.alert(
+        'Registration Failed',
+        error &&
+          typeof error === 'object' &&
+          'message' in error &&
+          typeof (error as any).message === 'string'
+          ? (error as any).message
+          : 'Something went wrong. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
-  return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  const handleNavigateToLogin = () => {
+    navigation.navigate('Login');
+  };
+
+  const GoalOption = ({
+    icon,
+    title,
+    subtitle,
+    selected,
+    onPress,
+  }: {
+    goal: string;
+    icon: string;
+    title: string;
+    subtitle: string;
+    selected: boolean;
+    onPress: () => void;
+  }) => (
+    <TouchableOpacity
+      style={[styles.goalOption, selected && styles.goalOptionSelected]}
+      onPress={onPress}
+      activeOpacity={0.7}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+      <Text style={styles.goalIcon}>{icon}</Text>
+      <Text style={[styles.goalTitle, selected && styles.goalTitleSelected]}>
+        {title}
+      </Text>
+      <Text
+        style={[styles.goalSubtitle, selected && styles.goalSubtitleSelected]}
       >
-        <View style={styles.content}>
+        {subtitle}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoid}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
           <View style={styles.header}>
-            <Text style={styles.title}>🍎 Create Account</Text>
+            <Text style={styles.logo}>🍎</Text>
+            <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>Start your fitness journey</Text>
           </View>
 
-          <View style={styles.form}>
-            <Text style={styles.sectionTitle}>Account Information</Text>
+          <View style={styles.formContainer}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Account Information</Text>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#999"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={formData.email}
-              editable={!isLoading}
-              onChangeText={text => setFormData({ ...formData, email: text })}
-            />
+              <View style={styles.inputGroup}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    validationErrors.email && styles.inputError,
+                  ]}
+                  placeholder="Email"
+                  placeholderTextColor="#999"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={formData.email}
+                  onChangeText={text => {
+                    setFormData({ ...formData, email: text });
+                    if (validationErrors.email) {
+                      setValidationErrors(prev => ({ ...prev, email: '' }));
+                    }
+                  }}
+                />
+                {validationErrors.email && (
+                  <Text style={styles.errorText}>{validationErrors.email}</Text>
+                )}
+              </View>
 
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={[styles.input, styles.passwordInput]}
-                placeholder="Password"
-                placeholderTextColor="#999"
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                editable={!isLoading}
-                value={formData.password}
-                onChangeText={text =>
-                  setFormData({ ...formData, password: text })
-                }
-              />
-              <TouchableOpacity
-                disabled={isLoading}
-                style={styles.eyeButton}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              placeholderTextColor="#999"
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              editable={!isLoading}
-              value={formData.confirmPassword}
-              onChangeText={text =>
-                setFormData({ ...formData, confirmPassword: text })
-              }
-            />
-
-            <Text style={[styles.sectionTitle, styles.sectionMargin]}>
-              Personal Information
-            </Text>
-
-            <View style={styles.row}>
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="Age"
-                placeholderTextColor="#999"
-                keyboardType="numeric"
-                editable={!isLoading}
-                value={formData.age.toString()}
-                onChangeText={text => setFormData({ ...formData, age: text })}
-              />
-
-              <Picker
-                style={[
-                  styles.halfInput,
-                  styles.pickerContainer,
-                  styles.pickerStyle,
-                ]}
-                mode="dropdown"
-                selectedValue={formData.gender}
-                onValueChange={itemValue =>
-                  setFormData({ ...formData, gender: itemValue })
-                }
-                itemStyle={styles.pickerText}
-              >
-                <Picker.Item label="Gender" value="" enabled={false} />
-                <Picker.Item label="Male" value="male" />
-                <Picker.Item label="Female" value="female" />
-              </Picker>
-              <Text style={styles.dropdownIcon}>▼</Text>
-            </View>
-
-            <View style={styles.row}>
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="Height (cm)"
-                placeholderTextColor="#999"
-                keyboardType="numeric"
-                editable={!isLoading}
-                value={formData.height.toString()}
-                onChangeText={text =>
-                  setFormData({ ...formData, height: text })
-                }
-              />
-
-              <TextInput
-                style={[styles.input, styles.halfInput]}
-                placeholder="Weight (kg)"
-                placeholderTextColor="#999"
-                keyboardType="numeric"
-                editable={!isLoading}
-                value={formData.weight.toString()}
-                onChangeText={text =>
-                  setFormData({ ...formData, weight: text })
-                }
-              />
-            </View>
-
-            <Text style={[styles.sectionTitle, styles.sectionMargin]}>
-              Activity level
-            </Text>
-
-            <View style={[styles.input, styles.pickerContainer]}>
-              <View style={styles.picker}>
-                <Picker
-                  mode="dropdown"
-                  selectedValue={formData.activity_level}
-                  onValueChange={itemValue =>
-                    setFormData({ ...formData, activity_level: itemValue })
-                  }
-                  style={[styles.pickerStyle, { flex: 1 }]}
-                  itemStyle={styles.pickerText}
-                >
-                  <Picker.Item
-                    label="Activity Level"
-                    value=""
-                    enabled={false}
+              <View style={styles.inputGroup}>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      styles.passwordInput,
+                      validationErrors.password && styles.inputError,
+                    ]}
+                    placeholder="Password"
+                    placeholderTextColor="#999"
+                    secureTextEntry={!showPassword}
+                    value={formData.password}
+                    onChangeText={text => {
+                      setFormData({ ...formData, password: text });
+                      if (validationErrors.password) {
+                        setValidationErrors(prev => ({
+                          ...prev,
+                          password: '',
+                        }));
+                      }
+                    }}
                   />
+                  <TouchableOpacity
+                    style={styles.eyeIcon}
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    <Text style={styles.eyeText}>
+                      {showPassword ? '🙈' : '👁️'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                {validationErrors.password && (
+                  <Text style={styles.errorText}>
+                    {validationErrors.password}
+                  </Text>
+                )}
+              </View>
+
+              <View style={styles.inputGroup}>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      styles.passwordInput,
+                      validationErrors.confirmPassword && styles.inputError,
+                    ]}
+                    placeholder="Confirm Password"
+                    placeholderTextColor="#999"
+                    secureTextEntry={!showConfirmPassword}
+                    value={formData.confirmPassword}
+                    onChangeText={text => {
+                      setFormData({ ...formData, confirmPassword: text });
+                      if (validationErrors.confirmPassword) {
+                        setValidationErrors(prev => ({
+                          ...prev,
+                          confirmPassword: '',
+                        }));
+                      }
+                    }}
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeIcon}
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    <Text style={styles.eyeText}>
+                      {showConfirmPassword ? '🙈' : '👁️'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                {validationErrors.confirmPassword && (
+                  <Text style={styles.errorText}>
+                    {validationErrors.confirmPassword}
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Personal Information</Text>
+
+              <View style={styles.row}>
+                <View style={styles.halfInput}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      validationErrors.age && styles.inputError,
+                    ]}
+                    placeholder="Age"
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    value={formData.age}
+                    onChangeText={text => {
+                      setFormData({ ...formData, age: text });
+                      if (validationErrors.age) {
+                        setValidationErrors(prev => ({ ...prev, age: '' }));
+                      }
+                    }}
+                  />
+                  {validationErrors.age && (
+                    <Text style={styles.errorTextSmall}>
+                      {validationErrors.age}
+                    </Text>
+                  )}
+                </View>
+
+                <View style={styles.halfInput}>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={formData.gender}
+                      onValueChange={value =>
+                        setFormData({ ...formData, gender: value })
+                      }
+                      style={styles.picker}
+                    >
+                      <Picker.Item label="Male" value={Gender.MALE} />
+                      <Picker.Item label="Female" value={Gender.FEMALE} />
+                    </Picker>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.row}>
+                <View style={styles.halfInput}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      validationErrors.height && styles.inputError,
+                    ]}
+                    placeholder="Height (cm)"
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    value={formData.height}
+                    onChangeText={text => {
+                      setFormData({ ...formData, height: text });
+                      if (validationErrors.height) {
+                        setValidationErrors(prev => ({ ...prev, height: '' }));
+                      }
+                    }}
+                  />
+                  {validationErrors.height && (
+                    <Text style={styles.errorTextSmall}>
+                      {validationErrors.height}
+                    </Text>
+                  )}
+                </View>
+
+                <View style={styles.halfInput}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      validationErrors.weight && styles.inputError,
+                    ]}
+                    placeholder="Weight (kg)"
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    value={formData.weight}
+                    onChangeText={text => {
+                      setFormData({ ...formData, weight: text });
+                      if (validationErrors.weight) {
+                        setValidationErrors(prev => ({ ...prev, weight: '' }));
+                      }
+                    }}
+                  />
+                  {validationErrors.weight && (
+                    <Text style={styles.errorTextSmall}>
+                      {validationErrors.weight}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Activity Level</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={formData.activity_level}
+                  onValueChange={value =>
+                    setFormData({ ...formData, activity_level: value })
+                  }
+                  style={styles.picker}
+                >
                   <Picker.Item
                     label="Sedentary"
                     value={ActivityLevel.SEDENTARY}
@@ -339,153 +415,75 @@ const RegisterScreen: React.FC = () => {
                     value={ActivityLevel.EXTREMELY_ACTIVE}
                   />
                 </Picker>
-                <Text style={styles.dropdownIcon}>▼</Text>
               </View>
             </View>
 
-            <Text style={[styles.sectionTitle, styles.sectionMargin]}>
-              Your Goal
-            </Text>
-
-            <View style={styles.goalContainer}>
-              <TouchableOpacity
-                disabled={isLoading}
-                style={[
-                  styles.goalButton,
-                  formData.goal === Goal.LOSE_WEIGHT && styles.goalButtonActive,
-                ]}
-                onPress={() =>
-                  setFormData({ ...formData, goal: Goal.LOSE_WEIGHT })
-                }
-              >
-                <Text
-                  style={[
-                    styles.goalEmoji,
-                    formData.goal === Goal.LOSE_WEIGHT &&
-                      styles.goalEmojiActive,
-                  ]}
-                >
-                  🔥
-                </Text>
-                <Text
-                  style={[
-                    styles.goalText,
-                    formData.goal === Goal.LOSE_WEIGHT && styles.goalTextActive,
-                  ]}
-                >
-                  Lose Weight
-                </Text>
-                <Text
-                  style={[
-                    styles.goalSubtext,
-                    formData.goal === Goal.LOSE_WEIGHT &&
-                      styles.goalSubtextActive,
-                  ]}
-                >
-                  -0.5kg/week
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                disabled={isLoading}
-                style={[
-                  styles.goalButton,
-                  formData.goal === Goal.MAINTAIN_WEIGHT &&
-                    styles.goalButtonActive,
-                ]}
-                onPress={() =>
-                  setFormData({ ...formData, goal: Goal.MAINTAIN_WEIGHT })
-                }
-              >
-                <Text
-                  style={[
-                    styles.goalEmoji,
-                    formData.goal === Goal.MAINTAIN_WEIGHT &&
-                      styles.goalEmojiActive,
-                  ]}
-                >
-                  ⚖️
-                </Text>
-                <Text
-                  style={[
-                    styles.goalText,
-                    formData.goal === Goal.MAINTAIN_WEIGHT &&
-                      styles.goalTextActive,
-                  ]}
-                >
-                  Maintain
-                </Text>
-                <Text
-                  style={[
-                    styles.goalSubtext,
-                    formData.goal === Goal.MAINTAIN_WEIGHT &&
-                      styles.goalSubtextActive,
-                  ]}
-                >
-                  Stay fit
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                disabled={isLoading}
-                style={[
-                  styles.goalButton,
-                  formData.goal === Goal.GAIN_WEIGHT && styles.goalButtonActive,
-                ]}
-                onPress={() =>
-                  setFormData({ ...formData, goal: Goal.GAIN_WEIGHT })
-                }
-              >
-                <Text
-                  style={[
-                    styles.goalEmoji,
-                    formData.goal === Goal.GAIN_WEIGHT &&
-                      styles.goalEmojiActive,
-                  ]}
-                >
-                  💪
-                </Text>
-                <Text
-                  style={[
-                    styles.goalText,
-                    formData.goal === Goal.GAIN_WEIGHT && styles.goalTextActive,
-                  ]}
-                >
-                  Gain Muscle
-                </Text>
-                <Text
-                  style={[
-                    styles.goalSubtext,
-                    formData.goal === Goal.GAIN_WEIGHT &&
-                      styles.goalSubtextActive,
-                  ]}
-                >
-                  +0.5kg/week
-                </Text>
-              </TouchableOpacity>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Your Goal</Text>
+              <View style={styles.goalContainer}>
+                <GoalOption
+                  goal="lose"
+                  icon="🔥"
+                  title="Lose Weight"
+                  subtitle="Burn calories"
+                  selected={formData.goal === Goal.LOSE_WEIGHT}
+                  onPress={() =>
+                    setFormData({ ...formData, goal: Goal.LOSE_WEIGHT })
+                  }
+                />
+                <GoalOption
+                  goal="maintain"
+                  icon="⚖️"
+                  title="Maintain"
+                  subtitle="Stay healthy"
+                  selected={formData.goal === Goal.MAINTAIN_WEIGHT}
+                  onPress={() =>
+                    setFormData({ ...formData, goal: Goal.MAINTAIN_WEIGHT })
+                  }
+                />
+                <GoalOption
+                  goal="gain"
+                  icon="💪"
+                  title="Gain Muscle"
+                  subtitle="Build strength"
+                  selected={formData.goal === Goal.GAIN_WEIGHT}
+                  onPress={() =>
+                    setFormData({ ...formData, goal: Goal.GAIN_WEIGHT })
+                  }
+                />
+              </View>
             </View>
 
             <TouchableOpacity
-              disabled={isLoading}
-              style={styles.submitButton}
+              style={[
+                styles.registerButton,
+                isLoading && styles.buttonDisabled,
+              ]}
               onPress={handleRegister}
-            >
-              <Text style={styles.submitButtonText}>Create Account</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
               disabled={isLoading}
-              style={styles.linkButton}
-              onPress={handleLoginNavigate}
+              activeOpacity={0.8}
             >
-              <Text style={styles.linkText}>
-                Already have an account? Login
+              <Text style={styles.registerButtonText}>
+                {isLoading ? 'Creating Account...' : 'Create Account'}
               </Text>
             </TouchableOpacity>
+
+            <View style={styles.loginContainer}>
+              <Text style={styles.loginText}>Already have an account? </Text>
+              <TouchableOpacity onPress={handleNavigateToLogin}>
+                <Text style={styles.loginLink}>Sign In</Text>
+              </TouchableOpacity>
+            </View>
+
+            {error && (
+              <View style={styles.globalErrorContainer}>
+                <Text style={styles.globalErrorText}>{error}</Text>
+              </View>
+            )}
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

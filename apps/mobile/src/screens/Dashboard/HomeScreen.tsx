@@ -1,196 +1,136 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   ScrollView,
+  TouchableOpacity,
   RefreshControl,
-  Alert,
 } from 'react-native';
-import Toast from 'react-native-toast-message';
+import { useNavigation } from '@react-navigation/native';
 
-import { useAuth } from '../../contexts/AuthContext';
-
+import { useAuth } from '@/contexts/AuthContext';
+import ActivitySummary from '@/components/ActivitySummary/ActivitySummary';
 import { styles } from './styles';
-import { dashboardApi, foodApi } from '@/services/dashboard';
+import { getDailyLogs } from '@/services/health';
 
-const HomeScreen = () => {
+export interface DailyDashboard {
+  totalCaloriesConsumed: number;
+  targetCalories: number;
+  caloriesBurned: number;
+  remainingCalories: number;
+}
+
+const HomeScreen: React.FC = () => {
+  const navigation = useNavigation();
   const { user, logout } = useAuth();
-  const [dashboardData, setDashboardData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [dashboard, setDashboard] = useState<DailyDashboard | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
   useEffect(() => {
-    loadDashboardData();
+    loadDashboard();
   }, []);
 
-  const loadDashboardData = async () => {
+  const loadDashboard = async () => {
     try {
-      console.log('📊 Loading dashboard data...');
-      const data = await dashboardApi.getDashboard();
-      setDashboardData(data);
-      console.log('✅ Dashboard data loaded');
+      const data: DailyDashboard = await getDailyLogs();
+      setDashboard(data);
     } catch (error) {
-      console.error('❌ Failed to load dashboard:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to load dashboard data',
-      });
-    } finally {
-      setIsLoading(false);
-      setRefreshing(false);
+      console.error('Failed to load dashboard:', error);
     }
   };
-  const onRefresh = () => {
+
+  const handleRefresh = async () => {
     setRefreshing(true);
-    loadDashboardData();
+    await loadDashboard();
+    setRefreshing(false);
   };
-  const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await logout();
-            Toast.show({
-              type: 'success',
-              text1: 'Logged out',
-              text2: 'See you soon!',
-            });
-          } catch (error) {
-            console.error('Logout error:', error);
-          }
-        },
-      },
-    ]);
-  };
-  const testFoodAnalysis = async () => {
-    try {
-      Toast.show({
-        type: 'info',
-        text1: 'Analyzing...',
-        text2: 'Testing food analysis',
-      });
 
-      const result = await foodApi.analyzeText('1 ябълка');
-      Toast.show({
-        type: 'success',
-        text1: 'Analysis Complete!',
-        text2: `${result.totalCalories} calories detected`,
-      });
-
-      loadDashboardData();
-    } catch (error) {
-      console.error('❌ Food analysis failed:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Analysis Failed',
-        text2: 'Please try again',
-      });
-    }
+  const handleFoodInput = () => {
+    navigation.navigate('FoodAnalysis');
   };
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading dashboard...</Text>
-      </View>
-    );
-  }
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  const getCalorieColor = () => {
+    if (!dashboard) return '#333';
+    const percentage =
+      (dashboard.totalCaloriesConsumed / dashboard.targetCalories) * 100;
+    if (percentage < 90) return '#4CAF50';
+    if (percentage < 100) return '#FF9800';
+    return '#F44336';
+  };
+
+  const getNetCalories = () => {
+    if (!dashboard) return 0;
+    return dashboard.totalCaloriesConsumed - dashboard.caloriesBurned;
+  };
+
   return (
     <ScrollView
       style={styles.container}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
       }
     >
       <View style={styles.header}>
-        <View>
-          <Text style={styles.welcomeText}>Welcome back!</Text>
-          <Text style={styles.emailText}>{user?.email}</Text>
-        </View>
+        <Text style={styles.greeting}>
+          Hello, {user?.email?.split('@')[0] || 'there'}! 👋
+        </Text>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.statsCard}>
-        <Text style={styles.sectionTitle}>Today's Summary</Text>
+      <View style={styles.calorieCard}>
+        <Text style={styles.calorieTitle}>Daily Calories</Text>
+        <View style={styles.calorieMain}>
+          <Text style={[styles.calorieValue, { color: getCalorieColor() }]}>
+            {dashboard?.totalCaloriesConsumed || 0}
+          </Text>
+          <Text style={styles.calorieDivider}>/</Text>
+          <Text style={styles.calorieTarget}>
+            {dashboard?.targetCalories || 2000}
+          </Text>
+        </View>
 
-        {dashboardData ? (
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {dashboardData.netCalories || 0}
-              </Text>
-              <Text style={styles.statLabel}>Net Calories</Text>
-            </View>
-
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {dashboardData.dailyCalorieGoal || 0}
-              </Text>
-              <Text style={styles.statLabel}>Daily Goal</Text>
-            </View>
-
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {dashboardData.remainingCalories || 0}
-              </Text>
-              <Text style={styles.statLabel}>Remaining</Text>
-            </View>
-          </View>
-        ) : (
-          <Text style={styles.noDataText}>No data available</Text>
-        )}
-
-        {dashboardData && (
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <View
-                style={[
-                  styles.progressFill,
-                  {
-                    width: `${Math.min(dashboardData.progressPercentage, 100)}%`,
-                  },
-                ]}
-              />
-            </View>
-            <Text style={styles.progressText}>
-              {dashboardData.progressPercentage}% of daily goal
-            </Text>
+        {dashboard && dashboard.caloriesBurned > 0 && (
+          <View style={styles.netCaloriesContainer}>
+            <Text style={styles.netCaloriesLabel}>Net Calories:</Text>
+            <Text style={styles.netCaloriesValue}>{getNetCalories()}</Text>
           </View>
         )}
+
+        <View style={styles.progressBar}>
+          <View
+            style={[
+              styles.progressFill,
+              {
+                width: `${Math.min(
+                  ((dashboard?.totalCaloriesConsumed || 0) /
+                    (dashboard?.targetCalories || 2000)) *
+                    100,
+                  100
+                )}%`,
+                backgroundColor: getCalorieColor(),
+              },
+            ]}
+          />
+        </View>
+        <Text style={styles.remainingText}>
+          {dashboard?.remainingCalories || 0} calories remaining
+        </Text>
       </View>
 
-      <View style={styles.actionsCard}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
+      <ActivitySummary onRefresh={loadDashboard} />
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={testFoodAnalysis}
-        >
-          <Text style={styles.actionIcon}>🧪</Text>
-          <Text style={styles.actionText}>Test Food Analysis</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionIcon}>📸</Text>
-          <Text style={styles.actionText}>Analyze Food Photo</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionIcon}>📝</Text>
-          <Text style={styles.actionText}>Add Food Manually</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionIcon}>📊</Text>
-          <Text style={styles.actionText}>View Progress</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={styles.addFoodButton} onPress={handleFoodInput}>
+        <Text style={styles.addFoodIcon}>🍽️</Text>
+        <Text style={styles.addFoodText}>Add Food</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
+
 export default HomeScreen;

@@ -1,26 +1,39 @@
+// apps/mobile/app.json
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Calorie Tracker",
+    "slug": "calorie-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.calorietracker",
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "Приложението има нужда от достъп до вашите здравни данни, за да следи изгорените калории и физическата активност",
+        "NSHealthUpdateUsageDescription": "Приложението има нужда от достъп за актуализиране на вашите здравни данни",
+        "NSMotionUsageDescription": "Приложението използва данни за движение, за да следи физическата ви активност",
+        "NSLocationWhenInUseUsageDescription": "Приложението има нужда от локация за проследяване на активности на открито"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "package": "com.yourcompany.calorietracker",
+      "permissions": [
+        "ACTIVITY_RECOGNITION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "BODY_SENSORS",
+        "INTERNET"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

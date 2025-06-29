@@ -1,4 +1,3 @@
-// apps/mobile/src/contexts/ActivityContext.tsx
 import React, {
   createContext,
   useContext,
@@ -8,13 +7,15 @@ import React, {
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import HealthAppsManager, {
-  HealthApp,
-  HealthAppType,
-  ActivityData,
-} from '@/services/healthApps/HealthAppsManager';
 import { useAuth } from './AuthContext';
 import { apiClient } from '@/services/api';
+import Constants from 'expo-constants';
+import {
+  ActivityData,
+  HealthApp,
+  HealthAppType,
+} from '@/services/healthService/interfaces';
+import HealthAppsManager from '@/services/healthService/HealthAppsManager';
 
 interface ActivityContextType {
   availableApps: HealthApp[];
@@ -80,22 +81,34 @@ export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const isExpoGo = Constants?.appOwnership === 'expo';
+
   const detectHealthApps = useCallback(async () => {
     setIsLoading(true);
     try {
       const apps = await HealthAppsManager.detectAvailableApps();
       setAvailableApps(apps);
 
+      if (isExpoGo) {
+        console.log('Running in Expo Go - manual selection only');
+        setIsLoading(false);
+        return;
+      }
+
       // Get preferences from backend if user is logged in
       if (isAuthenticated) {
-        const { data } = await apiClient.get('/activity/preferences');
-        if (data.preferredActivitySource) {
-          const preferredApp = apps.find(
-            app => app.type === data.preferredActivitySource
-          );
-          if (preferredApp && preferredApp.isAvailable) {
-            await selectHealthApp(data.preferredActivitySource);
+        try {
+          const { data } = await apiClient.get('/activity/preferences');
+          if (data.preferredActivitySource) {
+            const preferredApp = apps.find(
+              app => app.type === data.preferredActivitySource
+            );
+            if (preferredApp && preferredApp.isAvailable) {
+              await selectHealthApp(data.preferredActivitySource);
+            }
           }
+        } catch (error) {
+          console.log('No saved preferences');
         }
       }
     } catch (error) {

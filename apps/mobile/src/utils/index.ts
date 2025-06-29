@@ -1,4 +1,5 @@
-import { Goal, RegisterData } from '@/services/interfaces';
+import { Goal } from '@/services/enums';
+import { RegisterData } from '@/services/interfaces';
 
 export const calculateDailyCalories = (userData: RegisterData): number => {
   let bmr: number;

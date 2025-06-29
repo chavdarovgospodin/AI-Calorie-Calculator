@@ -3,134 +3,124 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#666',
+    backgroundColor: '#f5f5f5',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: 'white',
+    paddingBottom: 10,
   },
-  welcomeText: {
+  greeting: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
   },
-  emailText: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
-  },
   logoutButton: {
-    padding: 8,
-    borderRadius: 6,
-    backgroundColor: '#f1f3f4',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
   },
   logoutText: {
     color: '#007AFF',
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 16,
   },
-  statsCard: {
+  calorieCard: {
     backgroundColor: 'white',
     margin: 20,
+    marginTop: 10,
     padding: 20,
-    borderRadius: 16,
+    borderRadius: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  sectionTitle: {
+  calorieTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-    color: '#333',
+    color: '#666',
+    marginBottom: 10,
   },
-  statsGrid: {
+  calorieMain: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
+    alignItems: 'baseline',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statNumber: {
-    fontSize: 24,
+  calorieValue: {
+    fontSize: 48,
     fontWeight: 'bold',
-    color: '#007AFF',
   },
-  statLabel: {
-    fontSize: 12,
+  calorieDivider: {
+    fontSize: 32,
+    color: '#999',
+    marginHorizontal: 5,
+  },
+  calorieTarget: {
+    fontSize: 32,
     color: '#666',
-    marginTop: 4,
-    textAlign: 'center',
   },
-  noDataText: {
-    textAlign: 'center',
+  netCaloriesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  netCaloriesLabel: {
+    fontSize: 14,
     color: '#666',
-    fontStyle: 'italic',
-    paddingVertical: 20,
+    marginRight: 5,
   },
-  progressContainer: {
-    marginTop: 8,
+  netCaloriesValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#e9ecef',
+    backgroundColor: '#E0E0E0',
     borderRadius: 4,
     overflow: 'hidden',
+    marginBottom: 10,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#007AFF',
     borderRadius: 4,
   },
-  progressText: {
+  remainingText: {
     textAlign: 'center',
-    fontSize: 12,
     color: '#666',
-    marginTop: 8,
+    fontSize: 14,
   },
-  actionsCard: {
-    backgroundColor: 'white',
-    margin: 20,
-    marginTop: 0,
-    padding: 20,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  actionButton: {
+  addFoodButton: {
+    backgroundColor: '#007AFF',
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: '#f8f9fa',
-    marginBottom: 12,
+    justifyContent: 'center',
+    margin: 20,
+    marginTop: 10,
+    padding: 15,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
   },
-  actionIcon: {
-    fontSize: 20,
-    marginRight: 12,
+  addFoodIcon: {
+    fontSize: 24,
+    marginRight: 10,
   },
-  actionText: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
+  addFoodText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });

@@ -1,8 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { DashboardData, FoodAnalysisResult } from './interfaces';
-
 const createApiClient = (): AxiosInstance => {
   const baseURL = __DEV__
     ? 'http://localhost:3000/api'

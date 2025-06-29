@@ -1,38 +1,14 @@
 import { Platform } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
-import { PERMISSIONS, request, RESULTS } from 'react-native-permissions';
-
-export enum HealthAppType {
-  APPLE_HEALTH = 'healthkit',
-  GOOGLE_FIT = 'googlefit',
-  SAMSUNG_HEALTH = 'samsung_health',
-  HUAWEI_HEALTH = 'huawei_health',
-  DEVICE_SENSORS = 'device_sensors',
-  MANUAL = 'manual',
-}
-
-export interface HealthApp {
-  type: HealthAppType;
-  name: string;
-  description: string;
-  isAvailable: boolean;
-  isConnected: boolean;
-}
-
-export interface ActivityData {
-  date: string;
-  caloriesBurned: number;
-  steps?: number;
-  distance?: number;
-  duration?: number;
-  activityType?: string;
-  source: HealthAppType;
-}
+import { PERMISSIONS, request, check, RESULTS } from 'react-native-permissions';
+import Constants from 'expo-constants';
+import { HealthAppType, HealthApp, ActivityData } from './interfaces';
 
 class HealthAppsManager {
   private static instance: HealthAppsManager;
   private availableApps: HealthApp[] = [];
   private selectedApp: HealthAppType | null = null;
+  private isExpoGo: boolean = Constants.appOwnership === 'expo';
 
   private constructor() {}
 
@@ -46,6 +22,34 @@ class HealthAppsManager {
   async detectAvailableApps(): Promise<HealthApp[]> {
     this.availableApps = [];
 
+    // Check if running in Expo Go
+    if (this.isExpoGo) {
+      console.warn('Running in Expo Go - Health APIs not available');
+
+      // Only show manual entry and mock options in Expo Go
+      this.availableApps.push({
+        type: HealthAppType.MANUAL,
+        name: 'Manual Entry',
+        description: 'Manually log your activities',
+        isAvailable: true,
+        isConnected: false,
+      });
+
+      // Add a mock option for development
+      if (__DEV__) {
+        this.availableApps.push({
+          type: HealthAppType.DEVICE_SENSORS,
+          name: 'Mock Data (Dev Only)',
+          description: 'Use mock data for development',
+          isAvailable: true,
+          isConnected: false,
+        });
+      }
+
+      return this.availableApps;
+    }
+
+    // Normal detection for custom dev builds
     if (Platform.OS === 'ios') {
       // iOS apps
       this.availableApps.push({
@@ -137,6 +141,20 @@ class HealthAppsManager {
   }
 
   async connectApp(appType: HealthAppType): Promise<boolean> {
+    // Handle Expo Go limitations
+    if (this.isExpoGo && appType !== HealthAppType.MANUAL) {
+      if (__DEV__ && appType === HealthAppType.DEVICE_SENSORS) {
+        // Allow mock data in development
+        this.selectedApp = appType;
+        return true;
+      }
+
+      console.warn(
+        'Health APIs not available in Expo Go. Please create a development build.'
+      );
+      return false;
+    }
+
     const hasPermission = await this.requestPermissions(appType);
     if (!hasPermission) {
       return false;
@@ -175,6 +193,17 @@ class HealthAppsManager {
     }
 
     const today = new Date().toISOString().split('T')[0];
+
+    // Mock data for Expo Go development
+    if (this.isExpoGo && this.selectedApp === HealthAppType.DEVICE_SENSORS) {
+      return {
+        date: today,
+        caloriesBurned: Math.floor(Math.random() * 300) + 200,
+        steps: Math.floor(Math.random() * 5000) + 3000,
+        distance: Math.random() * 5 + 2,
+        source: HealthAppType.DEVICE_SENSORS,
+      };
+    }
 
     try {
       switch (this.selectedApp) {
