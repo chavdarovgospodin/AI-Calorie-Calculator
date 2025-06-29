@@ -1,3 +1,4 @@
+// apps/mobile/src/screens/Dashboard/HomeScreen.tsx
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -10,7 +11,6 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '@/contexts/AuthContext';
-import ActivitySummary from '@/components/ActivitySummary/ActivitySummary';
 import { styles } from './styles';
 import { getDailyLogs } from '@/services/health';
 
@@ -47,11 +47,11 @@ const HomeScreen: React.FC = () => {
   };
 
   const handleFoodInput = () => {
-    navigation.navigate('FoodAnalysis');
+    navigation.navigate('FoodInput');
   };
 
-  const handleLogout = async () => {
-    await logout();
+  const handleActivitySummary = () => {
+    navigation.navigate('Activity');
   };
 
   const getCalorieColor = () => {
@@ -71,21 +71,20 @@ const HomeScreen: React.FC = () => {
   return (
     <ScrollView
       style={styles.container}
+      contentContainerStyle={styles.contentContainer}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
       }
     >
       <View style={styles.header}>
         <Text style={styles.greeting}>
-          Hello, {user?.email?.split('@')[0] || 'there'}! 👋
+          Здравей, {user?.email?.split('@')[0] || 'there'}! 👋
         </Text>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
       </View>
 
+      {/* Main Calorie Display */}
       <View style={styles.calorieCard}>
-        <Text style={styles.calorieTitle}>Daily Calories</Text>
+        <Text style={styles.calorieTitle}>Дневни калории</Text>
         <View style={styles.calorieMain}>
           <Text style={[styles.calorieValue, { color: getCalorieColor() }]}>
             {dashboard?.totalCaloriesConsumed || 0}
@@ -95,13 +94,6 @@ const HomeScreen: React.FC = () => {
             {dashboard?.targetCalories || 2000}
           </Text>
         </View>
-
-        {dashboard && dashboard.caloriesBurned > 0 && (
-          <View style={styles.netCaloriesContainer}>
-            <Text style={styles.netCaloriesLabel}>Net Calories:</Text>
-            <Text style={styles.netCaloriesValue}>{getNetCalories()}</Text>
-          </View>
-        )}
 
         <View style={styles.progressBar}>
           <View
@@ -120,16 +112,66 @@ const HomeScreen: React.FC = () => {
           />
         </View>
         <Text style={styles.remainingText}>
-          {dashboard?.remainingCalories || 0} calories remaining
+          {dashboard?.remainingCalories || 0} калории остават
         </Text>
       </View>
 
-      <ActivitySummary onRefresh={loadDashboard} />
+      {/* Quick Stats */}
+      {/* <View style={styles.statsRow}>
+        <View style={styles.statCard}>
+          <Ionicons name="flame-outline" size={24} color="#FF6B35" />
+          <Text style={styles.statValue}>{dashboard?.caloriesBurned || 0}</Text>
+          <Text style={styles.statLabel}>Изгорени</Text>
+        </View>
 
+        <View style={styles.statCard}>
+          <Ionicons name="restaurant-outline" size={24} color="#4CAF50" />
+          <Text style={styles.statValue}>{getNetCalories()}</Text>
+          <Text style={styles.statLabel}>Нетни</Text>
+        </View>
+      </View> */}
+
+      {/* Prominent Add Food Button */}
       <TouchableOpacity style={styles.addFoodButton} onPress={handleFoodInput}>
-        <Ionicons name="restaurant-outline" size={24} color="#fff" />
-        <Text style={styles.addFoodText}>Add Food</Text>
+        <View style={styles.addFoodButtonContent}>
+          <Ionicons name="add-circle" size={32} color="#fff" />
+          <View style={styles.addFoodTextContainer}>
+            <Text style={styles.addFoodTitle}>Добави храна</Text>
+            <Text style={styles.addFoodSubtitle}>Снимай или опиши</Text>
+          </View>
+        </View>
       </TouchableOpacity>
+
+      {/* Activity Summary Button */}
+      <TouchableOpacity
+        style={styles.activityButton}
+        onPress={handleActivitySummary}
+      >
+        <Ionicons name="fitness-outline" size={24} color="#007AFF" />
+        <Text style={styles.activityButtonText}>Виж активност</Text>
+        <Ionicons name="chevron-forward" size={20} color="#007AFF" />
+      </TouchableOpacity>
+
+      {/* Quick Actions */}
+      <View style={styles.quickActions}>
+        <Text style={styles.sectionTitle}>Бързи действия</Text>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity style={styles.actionButton}>
+            <Ionicons name="water-outline" size={24} color="#007AFF" />
+            <Text style={styles.actionButtonText}>Вода</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton}>
+            <Ionicons name="calendar-outline" size={24} color="#007AFF" />
+            <Text style={styles.actionButtonText}>История</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton}>
+            <Ionicons name="stats-chart-outline" size={24} color="#007AFF" />
+            <Text style={styles.actionButtonText}>Прогрес</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </ScrollView>
   );
 };

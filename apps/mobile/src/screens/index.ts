@@ -11,3 +11,7 @@ export { default as ManualActivityScreen } from './ManualActivity/ManualActivity
 export { default as UserSettingsScreen } from './Settings/UserSettingsScreen';
 
 export { default as EditProfileScreen } from './EditProfile/EditProfileScreen';
+
+export { default as ActivityScreen } from './Activity/ActivityScreen';
+
+export { default as FoodInputScreen } from './FoodInput/FoodInputScreen';

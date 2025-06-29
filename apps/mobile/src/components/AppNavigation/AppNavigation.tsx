@@ -19,17 +19,21 @@ import {
 import HealthAppSelectionScreen from '../../screens/HealthAppSelection/HealthAppSelectionScreen';
 import ManualActivityScreen from '../../screens/ManualActivity/ManualActivityScreen';
 import UserSettingsScreen from '../../screens/Settings/UserSettingsScreen';
+import FoodInputScreen from '../../screens/FoodInput/FoodInputScreen';
+import ActivityScreen from '../../screens/Activity/ActivityScreen';
 
 export type RootStackParamList = {
   Login: undefined;
   Home: undefined;
   Register: undefined;
-  FoodAnalysis: undefined;
+  FoodInput: undefined;
+  Activity: undefined;
   HealthAppSelection: undefined;
   ManualActivity: undefined;
   UserSettings: undefined;
   EditProfile: undefined;
 };
+
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'Home'
@@ -99,6 +103,24 @@ const AppNavigation = () => {
             )}
             {!needsHealthAppSetup && (
               <>
+                <Stack.Screen
+                  name="FoodInput"
+                  component={FoodInputScreen}
+                  options={{
+                    title: 'Добави храна',
+                    headerShown: true,
+                  }}
+                />
+
+                <Stack.Screen
+                  name="Activity"
+                  component={ActivityScreen}
+                  options={{
+                    title: 'Активност',
+                    headerShown: true,
+                  }}
+                />
+
                 <Stack.Screen
                   name="HealthAppSelection"
                   component={HealthAppSelectionScreen}
