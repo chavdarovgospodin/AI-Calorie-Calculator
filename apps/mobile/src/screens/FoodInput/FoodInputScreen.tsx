@@ -14,23 +14,16 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
-import * as ImagePicker from 'expo-image-picker';
+import {
+  launchCamera,
+  launchImageLibrary,
+  MediaType,
+  ImagePickerResponse,
+  ImageLibraryOptions,
+} from 'react-native-image-picker';
+import { FoodAnalysisResult } from '@/services/interfaces';
 import { styles } from './styles';
-
-interface FoodAnalysisResult {
-  totalCalories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  foods: Array<{
-    name: string;
-    quantity: string;
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-  }>;
-}
+import { analyzeFood, analyzeFoodImage, saveFoodEntry } from '@/services/food';
 
 const FoodInputScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -46,21 +39,22 @@ const FoodInputScreen: React.FC = () => {
     if (!textInput.trim()) {
       Toast.show({
         type: 'error',
-        text1: 'Моля въведете описание на храната',
-        text2: 'Например: "200г пилешко филе, 100г ориз"',
+        text1: 'Please enter food description',
+        text2: 'Example: "200g chicken breast, 100g rice"',
       });
       return;
     }
 
     setIsAnalyzing(true);
     try {
-      // const result = await analyzeFood(textInput);
-      // setAnalysisResult(result);
+      const result = await analyzeFood(textInput);
+      setAnalysisResult(result);
     } catch (error) {
+      console.error('Text analysis error:', error);
       Toast.show({
         type: 'error',
-        text1: 'Грешка при анализ',
-        text2: 'Моля опитайте отново',
+        text1: 'Analysis failed',
+        text2: 'Please try again',
       });
     } finally {
       setIsAnalyzing(false);
@@ -68,65 +62,66 @@ const FoodInputScreen: React.FC = () => {
   };
 
   const handleCamera = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(
-        'Необходимо разрешение',
-        'Моля разрешете достъп до камерата от настройките на телефона'
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
+    const options: ImageLibraryOptions = {
+      mediaType: 'photo' as MediaType,
+      includeBase64: true,
+      maxHeight: 2000,
+      maxWidth: 2000,
       quality: 0.8,
-      base64: true,
-    });
+    };
 
-    if (!result.canceled && result.assets[0].base64) {
-      setSelectedImage(result.assets[0].uri);
-      setInputMode('camera');
-      analyzeImage(result.assets[0].base64);
-    }
+    launchCamera(options, (response: ImagePickerResponse) => {
+      if (response.didCancel || response.errorMessage) {
+        return;
+      }
+
+      if (response.assets && response.assets[0]) {
+        const asset = response.assets[0];
+        setSelectedImage(asset.uri || null);
+        setInputMode('camera');
+        if (asset.base64) {
+          analyzeImage(asset.base64);
+        }
+      }
+    });
   };
 
   const handleGallery = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(
-        'Необходимо разрешение',
-        'Моля разрешете достъп до галерията от настройките на телефона'
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
+    const options: ImageLibraryOptions = {
+      mediaType: 'photo' as MediaType,
+      includeBase64: true,
+      maxHeight: 2000,
+      maxWidth: 2000,
       quality: 0.8,
-      base64: true,
-    });
+    };
 
-    if (!result.canceled && result.assets[0].base64) {
-      setSelectedImage(result.assets[0].uri);
-      setInputMode('camera');
-      analyzeImage(result.assets[0].base64);
-    }
+    launchImageLibrary(options, (response: ImagePickerResponse) => {
+      if (response.didCancel || response.errorMessage) {
+        return;
+      }
+
+      if (response.assets && response.assets[0]) {
+        const asset = response.assets[0];
+        setSelectedImage(asset.uri || null);
+        setInputMode('camera');
+        if (asset.base64) {
+          analyzeImage(asset.base64);
+        }
+      }
+    });
   };
 
   const analyzeImage = async (base64: string) => {
     setIsAnalyzing(true);
     try {
-      // const result = await analyzeFoodImage(base64);
-      // setAnalysisResult(result);
+      const result = await analyzeFoodImage(base64);
+      setAnalysisResult(result);
     } catch (error) {
+      console.error('Image analysis error:', error);
       Toast.show({
         type: 'error',
-        text1: 'Грешка при анализ на снимката',
-        text2: 'Моля опитайте отново',
+        text1: 'Image analysis failed',
+        text2: 'Please try again',
       });
       setSelectedImage(null);
     } finally {
@@ -138,35 +133,36 @@ const FoodInputScreen: React.FC = () => {
     if (!analysisResult) return;
 
     Alert.alert(
-      'Потвърждение',
-      `Добавяне на ${analysisResult.totalCalories} калории към днешния ден?`,
+      'Confirm',
+      `Add ${analysisResult.totalCalories} calories to today's log?`,
       [
-        { text: 'Отказ', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Добави',
+          text: 'Add',
           onPress: async () => {
             setIsSaving(true);
             try {
-              // await saveFoodEntry({
-              //   foods: analysisResult.foods,
-              //   totalCalories: analysisResult.totalCalories,
-              //   protein: analysisResult.protein,
-              //   carbs: analysisResult.carbs,
-              //   fat: analysisResult.fat,
-              // });
+              await saveFoodEntry({
+                foods: analysisResult.foods,
+                totalCalories: analysisResult.totalCalories,
+                protein: analysisResult.protein,
+                carbs: analysisResult.carbs,
+                fat: analysisResult.fat,
+              });
 
               Toast.show({
                 type: 'success',
-                text1: 'Успешно добавено!',
-                text2: `${analysisResult.totalCalories} калории`,
+                text1: 'Successfully added!',
+                text2: `${analysisResult.totalCalories} calories`,
               });
 
               navigation.goBack();
             } catch (error) {
+              console.error('Save food entry error:', error);
               Toast.show({
                 type: 'error',
-                text1: 'Грешка при запазване',
-                text2: 'Моля опитайте отново',
+                text1: 'Failed to save',
+                text2: 'Please try again',
               });
             } finally {
               setIsSaving(false);
@@ -211,7 +207,7 @@ const FoodInputScreen: React.FC = () => {
                     inputMode === 'text' && styles.modeButtonTextActive,
                   ]}
                 >
-                  Текст
+                  Text
                 </Text>
               </TouchableOpacity>
 
@@ -233,7 +229,7 @@ const FoodInputScreen: React.FC = () => {
                     inputMode === 'camera' && styles.modeButtonTextActive,
                   ]}
                 >
-                  Снимка
+                  Photo
                 </Text>
               </TouchableOpacity>
             </View>
@@ -241,10 +237,10 @@ const FoodInputScreen: React.FC = () => {
             {/* Text Input Mode */}
             {inputMode === 'text' && (
               <View style={styles.textInputContainer}>
-                <Text style={styles.label}>Опишете какво ядохте:</Text>
+                <Text style={styles.label}>Describe what you ate:</Text>
                 <TextInput
                   style={styles.textInput}
-                  placeholder="Например: 200г пилешко филе, 100г ориз, салата"
+                  placeholder="Example: 200g chicken breast, 100g rice, salad"
                   value={textInput}
                   onChangeText={setTextInput}
                   multiline
@@ -265,7 +261,7 @@ const FoodInputScreen: React.FC = () => {
                   ) : (
                     <>
                       <Ionicons name="search" size={20} color="#fff" />
-                      <Text style={styles.analyzeButtonText}>Анализирай</Text>
+                      <Text style={styles.analyzeButtonText}>Analyze</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -284,20 +280,20 @@ const FoodInputScreen: React.FC = () => {
                     {isAnalyzing && (
                       <View style={styles.analyzingOverlay}>
                         <ActivityIndicator size="large" color="#fff" />
-                        <Text style={styles.analyzingText}>Анализиране...</Text>
+                        <Text style={styles.analyzingText}>Analyzing...</Text>
                       </View>
                     )}
                   </>
                 ) : (
                   <>
-                    <Text style={styles.label}>Снимайте храната:</Text>
+                    <Text style={styles.label}>Take a photo of your food:</Text>
                     <View style={styles.cameraButtons}>
                       <TouchableOpacity
                         style={styles.cameraButton}
                         onPress={handleCamera}
                       >
                         <Ionicons name="camera" size={32} color="#007AFF" />
-                        <Text style={styles.cameraButtonText}>Камера</Text>
+                        <Text style={styles.cameraButtonText}>Camera</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
@@ -305,7 +301,7 @@ const FoodInputScreen: React.FC = () => {
                         onPress={handleGallery}
                       >
                         <Ionicons name="images" size={32} color="#007AFF" />
-                        <Text style={styles.cameraButtonText}>Галерия</Text>
+                        <Text style={styles.cameraButtonText}>Gallery</Text>
                       </TouchableOpacity>
                     </View>
                   </>
@@ -317,14 +313,14 @@ const FoodInputScreen: React.FC = () => {
           /* Analysis Results */
           <View style={styles.resultsContainer}>
             <View style={styles.resultsHeader}>
-              <Text style={styles.resultsTitle}>Резултати от анализа</Text>
+              <Text style={styles.resultsTitle}>Analysis Results</Text>
               <TouchableOpacity onPress={resetAnalysis}>
                 <Ionicons name="close-circle" size={24} color="#666" />
               </TouchableOpacity>
             </View>
 
             <View style={styles.totalCaloriesCard}>
-              <Text style={styles.totalCaloriesLabel}>Общо калории</Text>
+              <Text style={styles.totalCaloriesLabel}>Total Calories</Text>
               <Text style={styles.totalCaloriesValue}>
                 {analysisResult.totalCalories}
               </Text>
@@ -332,28 +328,28 @@ const FoodInputScreen: React.FC = () => {
 
             <View style={styles.macrosContainer}>
               <View style={styles.macroItem}>
-                <Text style={styles.macroLabel}>Протеини</Text>
-                <Text style={styles.macroValue}>{analysisResult.protein}г</Text>
+                <Text style={styles.macroLabel}>Protein</Text>
+                <Text style={styles.macroValue}>{analysisResult.protein}g</Text>
               </View>
               <View style={styles.macroItem}>
-                <Text style={styles.macroLabel}>Въглехидрати</Text>
-                <Text style={styles.macroValue}>{analysisResult.carbs}г</Text>
+                <Text style={styles.macroLabel}>Carbs</Text>
+                <Text style={styles.macroValue}>{analysisResult.carbs}g</Text>
               </View>
               <View style={styles.macroItem}>
-                <Text style={styles.macroLabel}>Мазнини</Text>
-                <Text style={styles.macroValue}>{analysisResult.fat}г</Text>
+                <Text style={styles.macroLabel}>Fat</Text>
+                <Text style={styles.macroValue}>{analysisResult.fat}g</Text>
               </View>
             </View>
 
             <View style={styles.foodsList}>
-              <Text style={styles.foodsListTitle}>Разпознати храни:</Text>
+              <Text style={styles.foodsListTitle}>Detected Foods:</Text>
               {analysisResult.foods.map((food, index) => (
                 <View key={index} style={styles.foodItem}>
                   <View>
                     <Text style={styles.foodName}>{food.name}</Text>
                     <Text style={styles.foodQuantity}>{food.quantity}</Text>
                   </View>
-                  <Text style={styles.foodCalories}>{food.calories} кал</Text>
+                  <Text style={styles.foodCalories}>{food.calories} cal</Text>
                 </View>
               ))}
             </View>
@@ -368,7 +364,7 @@ const FoodInputScreen: React.FC = () => {
               ) : (
                 <>
                   <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                  <Text style={styles.saveButtonText}>Добави към дневника</Text>
+                  <Text style={styles.saveButtonText}>Add to Daily Log</Text>
                 </>
               )}
             </TouchableOpacity>

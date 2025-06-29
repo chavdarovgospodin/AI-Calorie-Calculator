@@ -1,4 +1,3 @@
-// apps/mobile/app.json
 {
   "expo": {
     "name": "Calorie Tracker",
@@ -19,8 +18,8 @@
         "NSHealthUpdateUsageDescription": "Приложението има нужда от достъп за актуализиране на вашите здравни данни",
         "NSMotionUsageDescription": "Приложението използва данни за движение, за да следи физическата ви активност",
         "NSLocationWhenInUseUsageDescription": "Приложението има нужда от локация за проследяване на активности на открито",
-        "NSPhotoLibraryUsageDescription": "Приложението има нужда от достъп до вашата фото библиотека, за да изберете снимки",
-        "NSCameraUsageDescription": "Приложението има нужда от достъп до камерата, за да правите снимки"
+        "NSPhotoLibraryUsageDescription": "This app needs photo library access to select food images for calorie analysis",
+        "NSCameraUsageDescription": "This app needs camera access to take photos of food for calorie analysis"
       }
     },
     "android": {
@@ -36,7 +35,8 @@
         "BODY_SENSORS",
         "INTERNET",
         "CAMERA",
-        "MEDIA_LIBRARY"
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {
