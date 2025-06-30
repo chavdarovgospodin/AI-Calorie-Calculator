@@ -28,6 +28,33 @@ export class UpdateDailyLogDto {
   calories_burned?: number;
 }
 
+export class FoodEntryDto {
+  id: string;
+  food_name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  quantity: number;
+  unit: string;
+  created_at: string;
+  description?: string;
+}
+
+export class ActivityEntryDto {
+  id: string;
+  activity_type: string;
+  duration: number;
+  calories_burned: number;
+  created_at: string;
+}
+
+export class MacrosDto {
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
 export class DashboardResponseDto {
   date: string;
   dailyCalorieGoal: number;
@@ -35,13 +62,11 @@ export class DashboardResponseDto {
   totalCaloriesBurned: number;
   netCalories: number;
   remainingCalories: number;
-  macros: {
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
+  macros: MacrosDto;
   progressPercentage: number;
   goalStatus: 'under' | 'on_target' | 'over';
-  foodEntries: any[];
-  activityEntries: any[];
+  foodEntries: FoodEntryDto[];
+  activityEntries: ActivityEntryDto[];
+  targetCalories: number;
+  caloriesBurned: number;
 }

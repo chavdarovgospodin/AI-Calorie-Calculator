@@ -37,3 +37,10 @@ export interface ActivitySummary {
   lastSync: string | null;
   source: ActivitySource | null;
 }
+
+export interface AvailableApp {
+  name: string;
+  source: ActivitySource;
+  isInstalled: boolean;
+  packageName?: string;
+}

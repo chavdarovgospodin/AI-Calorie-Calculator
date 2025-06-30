@@ -1,35 +1,89 @@
 import React, {
   createContext,
   useContext,
-  useState,
-  useEffect,
+  useReducer,
   useCallback,
+  useEffect,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { useAuth } from './AuthContext';
-import { apiClient } from '@/services/api';
-import Constants from 'expo-constants';
 import {
-  ActivityData,
-  HealthApp,
-  HealthAppType,
-} from '@/services/healthService/interfaces';
-import HealthAppsManager from '@/services/healthService/HealthAppsManager';
+  unifiedActivityService,
+  ActivitySource,
+} from '../services/activityService/activityService';
+import {
+  ActivitySummary,
+  AvailableApp,
+} from '@/services/activityService/interfaces';
+import { Platform } from 'react-native';
 
-interface ActivityContextType {
-  availableApps: HealthApp[];
-  selectedApp: HealthAppType | null;
+interface ActivityState {
+  availableApps: AvailableApp[];
+  selectedApp: ActivitySource | null;
   isConnected: boolean;
   isLoading: boolean;
-  todayActivity: ActivityData | null;
-
-  detectHealthApps: () => Promise<void>;
-  selectHealthApp: (appType: HealthAppType) => Promise<boolean>;
-  syncActivityData: () => Promise<void>;
-  getActivitySummary: (date?: string) => Promise<any>;
-  disconnectHealthApp: () => Promise<void>;
+  todayActivity: ActivitySummary | null;
+  error: string | null;
 }
+
+type ActivityAction =
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_AVAILABLE_APPS'; payload: AvailableApp[] }
+  | { type: 'SET_SELECTED_APP'; payload: ActivitySource | null }
+  | { type: 'SET_CONNECTED'; payload: boolean }
+  | { type: 'SET_TODAY_ACTIVITY'; payload: ActivitySummary | null }
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'CLEAR_ERROR' };
+
+interface ActivityContextType extends ActivityState {
+  detectHealthApps: () => Promise<AvailableApp[]>;
+  selectHealthApp: (app: ActivitySource) => Promise<void>;
+  syncActivityData: (date?: string) => Promise<ActivitySummary | null>;
+  getActivitySummary: (date?: string) => Promise<ActivitySummary | null>;
+  addManualActivity: (activity: {
+    activityType: string;
+    duration: number;
+    intensity: 'low' | 'moderate' | 'high';
+    caloriesBurned?: number;
+    notes?: string;
+    date?: string;
+  }) => Promise<void>;
+  disconnectHealthApp: () => Promise<void>;
+  clearError: () => void;
+}
+
+const initialState: ActivityState = {
+  availableApps: [],
+  selectedApp: null,
+  isConnected: false,
+  isLoading: false,
+  todayActivity: null,
+  error: null,
+};
+
+const activityReducer = (
+  state: ActivityState,
+  action: ActivityAction
+): ActivityState => {
+  switch (action.type) {
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload };
+    case 'SET_AVAILABLE_APPS':
+      return { ...state, availableApps: action.payload };
+    case 'SET_SELECTED_APP':
+      return { ...state, selectedApp: action.payload };
+    case 'SET_CONNECTED':
+      return { ...state, isConnected: action.payload };
+    case 'SET_TODAY_ACTIVITY':
+      return { ...state, todayActivity: action.payload };
+    case 'SET_ERROR':
+      return { ...state, error: action.payload };
+    case 'CLEAR_ERROR':
+      return { ...state, error: null };
+    default:
+      return state;
+  }
+};
 
 const ActivityContext = createContext<ActivityContextType | undefined>(
   undefined
@@ -38,203 +92,208 @@ const ActivityContext = createContext<ActivityContextType | undefined>(
 export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { isAuthenticated, user } = useAuth();
-  const [availableApps, setAvailableApps] = useState<HealthApp[]>([]);
-  const [selectedApp, setSelectedApp] = useState<HealthAppType | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [todayActivity, setTodayActivity] = useState<ActivityData | null>(null);
+  const [state, dispatch] = useReducer(activityReducer, initialState);
+  const { isAuthenticated } = useAuth();
 
-  // Load saved preferences on mount
+  // Load saved settings on mount
   useEffect(() => {
-    loadSavedPreferences();
-  }, []);
-
-  // Auto-detect apps when user logs in
-  useEffect(() => {
-    if (user) {
-      detectHealthApps();
-    }
-  }, [user]);
-
-  // Auto-sync when app is selected
-  useEffect(() => {
-    if (selectedApp && isConnected) {
-      syncActivityData();
-      // Set up periodic sync every 30 minutes
-      const interval = setInterval(syncActivityData, 30 * 60 * 1000);
-      return () => clearInterval(interval);
-    }
-  }, [selectedApp, isConnected]);
-
-  const loadSavedPreferences = async () => {
-    try {
-      const savedApp = await AsyncStorage.getItem('selectedHealthApp');
-      const savedConnected = await AsyncStorage.getItem('healthAppConnected');
-
-      if (savedApp) {
-        setSelectedApp(savedApp as HealthAppType);
-        setIsConnected(savedConnected === 'true');
-      }
-    } catch (error) {
-      console.error('Failed to load preferences:', error);
-    }
-  };
-
-  const isExpoGo = Constants?.appOwnership === 'expo';
-
-  const detectHealthApps = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const apps = await HealthAppsManager.detectAvailableApps();
-      setAvailableApps(apps);
-
-      if (isExpoGo) {
-        console.log('Running in Expo Go - manual selection only');
-        setIsLoading(false);
-        return;
-      }
-
-      // Get preferences from backend if user is logged in
-      if (isAuthenticated) {
-        try {
-          const { data } = await apiClient.get('/activity/preferences');
-          if (data.preferredActivitySource) {
-            const preferredApp = apps.find(
-              app => app.type === data.preferredActivitySource
-            );
-            if (preferredApp && preferredApp.isAvailable) {
-              await selectHealthApp(data.preferredActivitySource);
-            }
-          }
-        } catch (error) {
-          console.log('No saved preferences');
-        }
-      }
-    } catch (error) {
-      console.error('Failed to detect health apps:', error);
-    } finally {
-      setIsLoading(false);
+    if (isAuthenticated) {
+      loadSavedSettings();
     }
   }, [isAuthenticated]);
 
-  const selectHealthApp = useCallback(
-    async (appType: HealthAppType): Promise<boolean> => {
-      setIsLoading(true);
-      try {
-        // Connect to the health app
-        const connected = await HealthAppsManager.connectApp(appType);
-
-        if (connected) {
-          HealthAppsManager.setSelectedApp(appType);
-          setSelectedApp(appType);
-          setIsConnected(true);
-
-          // Save to local storage
-          await AsyncStorage.setItem('selectedHealthApp', appType);
-          await AsyncStorage.setItem('healthAppConnected', 'true');
-
-          // Update backend preferences if logged in
-          if (isAuthenticated) {
-            await apiClient.put('/activity/preferences', {
-              preferredActivitySource: appType,
-              enabledSources: [appType],
-              autoSyncEnabled: true,
-              syncFrequency: 'realtime',
-            });
-          }
-
-          // Initial sync
-          await syncActivityData();
-
-          return true;
-        }
-
-        return false;
-      } catch (error) {
-        console.error('Failed to select health app:', error);
-        return false;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [isAuthenticated]
-  );
-
-  const syncActivityData = useCallback(async () => {
-    if (!selectedApp || !isAuthenticated) return;
-
+  const loadSavedSettings = async () => {
     try {
-      // Get today's activity data from health app
-      const activityData = await HealthAppsManager.getTodayActivityData();
+      const [savedApp, isConnectedStr] = await Promise.all([
+        AsyncStorage.getItem('selectedHealthApp'),
+        AsyncStorage.getItem('healthAppConnected'),
+      ]);
 
-      if (activityData) {
-        setTodayActivity(activityData);
-
-        // Sync to backend
-        await apiClient.post('/activity/sync', {
-          source: activityData.source,
-          caloriesBurned: activityData.caloriesBurned,
-          steps: activityData.steps,
-          distance: activityData.distance,
-          duration: activityData.duration,
-          date: activityData.date,
-          activityType: activityData.activityType,
+      if (savedApp && isConnectedStr === 'true') {
+        dispatch({
+          type: 'SET_SELECTED_APP',
+          payload: savedApp as ActivitySource,
         });
+        dispatch({ type: 'SET_CONNECTED', payload: true });
+
+        // Sync today's data
+        syncActivityData();
       }
     } catch (error) {
-      console.error('Failed to sync activity data:', error);
+      console.error('Failed to load saved settings:', error);
     }
-  }, [selectedApp, isAuthenticated]);
+  };
 
-  const getActivitySummary = useCallback(
-    async (date?: string) => {
+  const detectHealthApps = useCallback(async (): Promise<AvailableApp[]> => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'CLEAR_ERROR' });
+
+      const platform =
+        Platform.OS === 'ios' || Platform.OS === 'android'
+          ? Platform.OS
+          : 'android';
+      const apps =
+        await unifiedActivityService.getAvailableActivitySources(platform);
+      dispatch({ type: 'SET_AVAILABLE_APPS', payload: apps });
+
+      return apps;
+    } catch (error) {
+      console.error('Failed to detect health apps:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to detect health apps' });
+      return [];
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }, []);
+
+  const selectHealthApp = useCallback(
+    async (app: ActivitySource): Promise<void> => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        dispatch({ type: 'CLEAR_ERROR' });
+
+        await unifiedActivityService.connectApp(app);
+
+        await Promise.all([
+          AsyncStorage.setItem('selectedHealthApp', app),
+          AsyncStorage.setItem('healthAppConnected', 'true'),
+        ]);
+
+        dispatch({ type: 'SET_SELECTED_APP', payload: app });
+        dispatch({ type: 'SET_CONNECTED', payload: true });
+
+        // Sync today's data
+        await syncActivityData();
+      } catch (error) {
+        console.error('Failed to select health app:', error);
+        dispatch({
+          type: 'SET_ERROR',
+          payload: 'Failed to connect to health app',
+        });
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    },
+    []
+  );
+
+  const syncActivityData = useCallback(
+    async (date?: string): Promise<ActivitySummary | null> => {
       if (!isAuthenticated) return null;
 
       try {
-        const targetDate = date || new Date().toISOString().split('T')[0];
-        const { data } = await apiClient.get(`/activity/summary/${targetDate}`);
-        return data;
+        dispatch({ type: 'CLEAR_ERROR' });
+
+        const summary = await unifiedActivityService.syncActivityData(date);
+
+        if (!date || date === new Date().toISOString().split('T')[0]) {
+          dispatch({ type: 'SET_TODAY_ACTIVITY', payload: summary });
+        }
+
+        return summary;
       } catch (error) {
-        console.error('Failed to get activity summary:', error);
+        console.error('Failed to sync activity data:', error);
+        dispatch({
+          type: 'SET_ERROR',
+          payload: 'Failed to sync activity data',
+        });
         return null;
       }
     },
     [isAuthenticated]
   );
 
-  const disconnectHealthApp = useCallback(async () => {
-    try {
-      setSelectedApp(null);
-      setIsConnected(false);
-      setTodayActivity(null);
+  const getActivitySummary = useCallback(
+    async (date?: string): Promise<ActivitySummary | null> => {
+      if (!isAuthenticated) return null;
 
-      await AsyncStorage.removeItem('selectedHealthApp');
-      await AsyncStorage.removeItem('healthAppConnected');
-
-      if (isAuthenticated) {
-        await apiClient.put('/activity/preferences', {
-          preferredActivitySource: null,
-          enabledSources: [],
-          autoSyncEnabled: false,
+      try {
+        dispatch({ type: 'CLEAR_ERROR' });
+        return await unifiedActivityService.getActivitySummary(date);
+      } catch (error) {
+        console.error('Failed to get activity summary:', error);
+        dispatch({
+          type: 'SET_ERROR',
+          payload: 'Failed to get activity summary',
         });
+        return null;
       }
+    },
+    [isAuthenticated]
+  );
+
+  const addManualActivity = useCallback(
+    async (activity: {
+      activityType: string;
+      duration: number;
+      intensity: 'low' | 'moderate' | 'high';
+      caloriesBurned?: number;
+      notes?: string;
+      date?: string;
+    }): Promise<void> => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        dispatch({ type: 'CLEAR_ERROR' });
+
+        await unifiedActivityService.addManualActivity(activity);
+
+        // Refresh today's data if adding for today
+        const targetDate =
+          activity.date || new Date().toISOString().split('T')[0];
+        const today = new Date().toISOString().split('T')[0];
+
+        if (targetDate === today) {
+          await syncActivityData();
+        }
+      } catch (error) {
+        console.error('Failed to add manual activity:', error);
+        dispatch({
+          type: 'SET_ERROR',
+          payload: 'Failed to add manual activity',
+        });
+        throw error;
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    },
+    [syncActivityData]
+  );
+
+  const disconnectHealthApp = useCallback(async (): Promise<void> => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'CLEAR_ERROR' });
+
+      await unifiedActivityService.disconnectAllApps();
+
+      dispatch({ type: 'SET_SELECTED_APP', payload: null });
+      dispatch({ type: 'SET_CONNECTED', payload: false });
+      dispatch({ type: 'SET_TODAY_ACTIVITY', payload: null });
     } catch (error) {
       console.error('Failed to disconnect health app:', error);
+      dispatch({
+        type: 'SET_ERROR',
+        payload: 'Failed to disconnect health app',
+      });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [isAuthenticated]);
+  }, []);
+
+  const clearError = useCallback(() => {
+    dispatch({ type: 'CLEAR_ERROR' });
+  }, []);
 
   const value: ActivityContextType = {
-    availableApps,
-    selectedApp,
-    isConnected,
-    isLoading,
-    todayActivity,
+    ...state,
     detectHealthApps,
     selectHealthApp,
     syncActivityData,
     getActivitySummary,
+    addManualActivity,
     disconnectHealthApp,
+    clearError,
   };
 
   return (
@@ -244,7 +303,7 @@ export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useActivity = () => {
+export const useActivity = (): ActivityContextType => {
   const context = useContext(ActivityContext);
   if (!context) {
     throw new Error('useActivity must be used within ActivityProvider');

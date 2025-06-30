@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  useRef,
+} from 'react';
+import { AppState, AppStateStatus } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 import {
   AuthAction,
@@ -12,9 +20,10 @@ import {
   login as authLogin,
   logout as authLogout,
   register as authRegister,
+  isTokenExpired,
+  refreshTokens,
 } from '@/services/auth';
 import { RegisterData } from '@/services/interfaces';
-import { useNavigation } from '@react-navigation/native';
 
 const initialState: AuthState = {
   user: null,
@@ -74,14 +83,56 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const appState = useRef(AppState.currentState);
+  // const navigation = useNavigation();
+
   useEffect(() => {
     checkStoredAuth();
+
+    // Set up app state listener for foreground refresh
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange
+    );
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
+
+  const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+    if (
+      appState.current.match(/inactive|background/) &&
+      nextAppState === 'active' &&
+      state.isAuthenticated
+    ) {
+      // App has come to foreground - check if token needs refresh
+      const expired = await isTokenExpired();
+      if (expired) {
+        const success = await refreshTokens();
+        if (!success) {
+          dispatch({ type: 'AUTH_LOGOUT' });
+          // navigation.navigate('Login' as never);
+        }
+      }
+    }
+    appState.current = nextAppState;
+  };
 
   const checkStoredAuth = async () => {
     try {
       const isAuth = await isAuthenticated();
       if (isAuth) {
+        // Check if token is expired
+        const expired = await isTokenExpired();
+        if (expired) {
+          const success = await refreshTokens();
+          if (!success) {
+            dispatch({ type: 'AUTH_LOGOUT' });
+            return;
+          }
+        }
+
         const user = await getStoredUser();
         if (user) {
           dispatch({ type: 'AUTH_SUCCESS', payload: user });
@@ -138,6 +189,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       dispatch({ type: 'AUTH_LOGOUT' });
     }
   };
+
   const clearError = () => {
     dispatch({ type: 'CLEAR_ERROR' });
   };

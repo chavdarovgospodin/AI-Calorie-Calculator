@@ -121,14 +121,14 @@ const AppNavigation = () => {
                   }}
                 />
 
-                {/* <Stack.Screen
+                <Stack.Screen
                   name="HealthAppSelection"
                   component={HealthAppSelectionScreen}
                   options={{
                     title: 'Activity Tracking',
                     headerShown: true,
                   }}
-                /> */}
+                />
 
                 <Stack.Screen
                   name="ManualActivity"
@@ -153,15 +153,6 @@ const AppNavigation = () => {
                   component={EditProfileScreen}
                   options={{
                     title: 'Edit Profile',
-                    headerShown: true,
-                  }}
-                />
-
-                <Stack.Screen
-                  name="HealthAppSelection"
-                  component={HealthAppSelectionScreen}
-                  options={{
-                    title: 'Activity Tracking',
                     headerShown: true,
                   }}
                 />

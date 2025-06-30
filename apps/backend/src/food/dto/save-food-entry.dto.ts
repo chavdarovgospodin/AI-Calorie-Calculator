@@ -2,34 +2,48 @@ import {
   IsString,
   IsNumber,
   IsOptional,
-  IsDateString,
+  IsArray,
+  IsNotEmpty,
   Min,
   Max,
-  IsNotEmpty,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
-export class CreateFoodEntryDto {
+export class FoodItemDto {
   @IsString()
   @IsNotEmpty()
-  description: string;
+  name: string;
 
-  @IsOptional()
   @IsString()
-  food_name?: string;
+  quantity: string;
 
-  @IsOptional()
   @IsNumber()
   @Min(0)
-  quantity?: number;
+  calories: number;
 
+  @IsNumber()
+  @Min(0)
+  protein: number;
+
+  @IsNumber()
+  @Min(0)
+  carbs: number;
+
+  @IsNumber()
+  @Min(0)
+  fat: number;
+}
+
+export class SaveFoodEntryDto {
   @IsOptional()
   @IsString()
-  unit?: string;
+  description?: string;
 
   @IsNumber()
   @Min(0)
   @Max(10000)
-  calories: number;
+  totalCalories: number;
 
   @IsNumber()
   @Min(0)
@@ -44,23 +58,10 @@ export class CreateFoodEntryDto {
   fat: number;
 
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  fiber?: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  sugar?: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  sodium?: number;
-
-  @IsOptional()
-  @IsString()
-  ai_model_used?: string;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => FoodItemDto)
+  foods?: FoodItemDto[];
 
   @IsOptional()
   @IsString()

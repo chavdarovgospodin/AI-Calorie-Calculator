@@ -65,25 +65,26 @@ const HealthAppSelectionScreen: React.FC = () => {
   };
 
   const handleSkip = () => {
-    Alert.alert(
-      'Skip Health App Setup?',
-      'You can always connect a health app later from settings. For now, you can manually log your activities.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Skip',
-          onPress: () => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Home' }],
-            });
-          },
-        },
-      ]
-    );
+    navigation.navigate('Home');
+    // Alert.alert(
+    //   'Skip Health App Setup?',
+    //   'You can always connect a health app later from settings. For now, you can manually log your activities.',
+    //   [
+    //     {
+    //       text: 'Cancel',
+    //       style: 'cancel',
+    //     },
+    //     {
+    //       text: 'Skip',
+    //       onPress: () => {
+    //         navigation.reset({
+    //           index: 0,
+    //           routes: [{ name: 'Home' }],
+    //         });
+    //       },
+    //     },
+    //   ]
+    // );
   };
 
   const getAppIcon = (
@@ -196,7 +197,7 @@ const HealthAppSelectionScreen: React.FC = () => {
           ) : (
             <>
               <Text style={styles.sectionTitle}>Available Options</Text>
-              {availableApps.map(renderHealthApp)}
+              {availableApps?.map(renderHealthApp)}
             </>
           )}
         </View>

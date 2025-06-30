@@ -47,4 +47,10 @@ export class AuthController {
       throw error; // Re-throw as AuthService already handles proper exceptions
     }
   }
+
+  @Post('refresh')
+  @HttpCode(200)
+  async refresh(@Body() body: { refresh_token: string }) {
+    return this.authService.refreshToken(body.refresh_token);
+  }
 }
