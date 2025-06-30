@@ -23,8 +23,7 @@ export interface UpdateProfileDto {
 }
 
 export const getUserProfile = async (): Promise<UserProfile> => {
-  const response = await apiClient.get('/users/profile');
-  return response.data;
+  return await apiClient.get('/users/profile');
 };
 
 export const updateUserProfile = async (

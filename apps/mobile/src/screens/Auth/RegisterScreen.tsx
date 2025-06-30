@@ -101,11 +101,10 @@ const RegisterScreen: React.FC = () => {
 
       await register(registerData);
 
-      Alert.alert(
-        'Success!',
-        'Account created successfully. Welcome to your fitness journey!',
-        [{ text: 'OK', onPress: () => navigation.navigate('Dashboard') }]
-      );
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'HealthAppSelection' }],
+      });
     } catch (error) {
       console.error('Registration error:', error);
       Alert.alert(

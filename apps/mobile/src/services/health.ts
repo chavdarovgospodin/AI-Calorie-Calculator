@@ -3,8 +3,7 @@ import { apiClient } from './api';
 
 export const getDailyLogs = async (): Promise<DailyDashboard> => {
   try {
-    const response = await apiClient.get('/daily-logs/dashboard');
-    return response.data;
+    return await apiClient.get('/daily-logs/dashboard');
   } catch (error) {
     console.error(error);
     throw error;

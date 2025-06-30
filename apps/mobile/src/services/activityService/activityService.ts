@@ -8,6 +8,7 @@ export enum ActivitySource {
   SAMSUNG_HEALTH = 'samsung_health',
   APPLE_HEALTH = 'apple_health',
   MANUAL = 'manual',
+  DEVICE_SENSORS = 'device_sensors',
 }
 
 class UnifiedActivityService {
@@ -70,10 +71,9 @@ class UnifiedActivityService {
     platform: 'ios' | 'android'
   ): Promise<AvailableApp[]> {
     try {
-      const response = await apiClient.get('/activity/sources', {
+      return await apiClient.get('/activity/sources', {
         params: { platform },
       });
-      return response.data;
     } catch (error) {
       console.error('❌ Failed to get activity sources:', error);
       throw error;
@@ -201,11 +201,6 @@ class UnifiedActivityService {
     try {
       const targetDate = date || new Date().toISOString().split('T')[0];
       console.log(`🔄 Syncing activity data for ${targetDate}...`);
-
-      const activities: ActivityData[] = [];
-      let totalCaloriesBurned = 0;
-      let totalSteps = 0;
-      let totalDistance = 0;
 
       const summary = await this.getActivitySummary(targetDate);
 

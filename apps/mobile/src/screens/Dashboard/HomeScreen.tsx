@@ -1,5 +1,4 @@
-// apps/mobile/src/screens/Dashboard/HomeScreen.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -14,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { styles } from './styles';
 import { getDailyLogs } from '@/services/health';
+import { LoadingScreen, RecentFood } from '@/components';
 
 export interface FoodEntry {
   id: string;
@@ -45,6 +45,7 @@ const HomeScreen: React.FC = () => {
   const { user } = useAuth();
   const [dashboard, setDashboard] = useState<DailyDashboard | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadDashboard();
@@ -56,9 +57,11 @@ const HomeScreen: React.FC = () => {
       setDashboard(data);
     } catch (error) {
       console.error('Failed to load dashboard:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
-  console.log(dashboard);
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await loadDashboard();
@@ -87,23 +90,7 @@ const HomeScreen: React.FC = () => {
     return dashboard.totalCaloriesConsumed - dashboard.caloriesBurned;
   };
 
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
-  };
-
-  const getTimeOfDay = (timestamp: string) => {
-    const hour = new Date(timestamp).getHours();
-    if (hour < 11) return '🌅 Breakfast';
-    if (hour < 15) return '🌞 Lunch';
-    if (hour < 19) return '🌆 Dinner';
-    return '🌙 Snack';
-  };
-
-  const handleDeleteFood = (foodId: string) => {
+  const handleDeleteFood = useCallback((foodId: string) => {
     Alert.alert(
       'Delete Food',
       'Are you sure you want to remove this food entry?',
@@ -119,67 +106,11 @@ const HomeScreen: React.FC = () => {
         },
       ]
     );
-  };
+  }, []);
 
-  const renderRecentFoods = () => {
-    if (!dashboard?.foodEntries || dashboard.foodEntries.length === 0) {
-      return (
-        <View style={styles.emptyFoodsContainer}>
-          <Ionicons name="restaurant-outline" size={48} color="#ccc" />
-          <Text style={styles.emptyFoodsText}>No food logged today</Text>
-          <Text style={styles.emptyFoodsSubtext}>
-            Start by adding your first meal
-          </Text>
-        </View>
-      );
-    }
-
-    // Show last 3 food entries
-    const recentFoods = dashboard.foodEntries.slice(-3).reverse();
-
-    return (
-      <View style={styles.foodsSection}>
-        <View style={styles.foodsSectionHeader}>
-          <Text style={styles.foodsSectionTitle}>Today's Food</Text>
-          {dashboard.foodEntries.length > 3 && (
-            <TouchableOpacity
-              onPress={() => {
-                /* TODO: Navigate to food history */
-              }}
-            >
-              <Text style={styles.seeAllText}>
-                See all ({dashboard.foodEntries.length})
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {recentFoods.map(food => (
-          <View key={food.id} style={styles.foodItem}>
-            <View style={styles.foodItemLeft}>
-              <Text style={styles.timeOfDay}>
-                {getTimeOfDay(food.created_at)}
-              </Text>
-              <Text style={styles.foodName}>{food.food_name}</Text>
-              <Text style={styles.foodDetails}>
-                {food.quantity}
-                {food.unit} • {formatTime(food.created_at)}
-              </Text>
-            </View>
-            <View style={styles.foodItemRight}>
-              <Text style={styles.foodCalories}>{food.calories} cal</Text>
-              <TouchableOpacity
-                onPress={() => handleDeleteFood(food.id)}
-                style={styles.deleteButton}
-              >
-                <Ionicons name="trash-outline" size={16} color="#FF6B6B" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-      </View>
-    );
-  };
+  if (isLoading || refreshing) {
+    return <LoadingScreen />;
+  }
 
   return (
     <ScrollView
@@ -250,8 +181,9 @@ const HomeScreen: React.FC = () => {
         </View>
       )}
 
-      {/* Food Entries Section */}
-      {renderRecentFoods()}
+      {dashboard && (
+        <RecentFood dashboard={dashboard} handleDeleteFood={handleDeleteFood} />
+      )}
 
       {/* Prominent Add Food Button */}
       <TouchableOpacity style={styles.addFoodButton} onPress={handleFoodInput}>

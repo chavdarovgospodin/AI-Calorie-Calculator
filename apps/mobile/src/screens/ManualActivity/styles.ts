@@ -65,6 +65,9 @@ export const styles = StyleSheet.create({
   inputWithIcon: {
     paddingLeft: 45,
   },
+  activityIcon: {
+    alignSelf: 'flex-start',
+  },
   textArea: {
     minHeight: 80,
     paddingTop: 12,

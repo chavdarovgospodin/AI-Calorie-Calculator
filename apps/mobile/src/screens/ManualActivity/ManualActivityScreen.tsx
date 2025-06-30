@@ -13,7 +13,6 @@ import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
 
-import { apiClient } from '@/services/api';
 import { styles } from './styles';
 import { getTestCalculation, setManualActivity } from '@/services/health';
 

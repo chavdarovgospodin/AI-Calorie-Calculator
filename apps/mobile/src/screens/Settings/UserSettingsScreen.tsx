@@ -112,7 +112,7 @@ const UserSettingsScreen: React.FC = () => {
 
   const calculateAge = () => {
     if (!profile?.age) return 'N/A';
-    return `${profile.age} години`;
+    return `${profile.age} years`;
   };
 
   const getBMI = () => {
