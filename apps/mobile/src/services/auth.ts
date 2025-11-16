@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { RegisterData, AuthResponse, User } from './interfaces';
+import { RegisterData, User } from '@/types/user';
+import { AuthResponse } from '@/types/auth';
 import { apiClient } from './api';
-import { ActivityLevel } from './enums';
 
 const TOKEN_KEYS = {
   ACCESS_TOKEN: 'access_token',

@@ -1,4 +1,3 @@
-// apps/mobile/src/screens/Activity/ActivityScreen.tsx
 import React from 'react';
 import {
   View,
@@ -17,7 +16,6 @@ const ActivityScreen: React.FC = () => {
   const navigation = useNavigation();
   const today = new Date().toISOString().split('T')[0];
 
-  // React Query hook - толкова просто!
   const {
     data: activity,
     isLoading,

@@ -1,6 +1,6 @@
-// apps/mobile/src/hooks/api/useActivity.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/services/api';
+import { ManualActivityInput } from '@/types/health';
 import Toast from 'react-native-toast-message';
 
 // Get activity summary for a date
@@ -22,13 +22,7 @@ export const useAddManualActivity = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (activityData: {
-      activityType: string;
-      duration: number;
-      intensity: 'low' | 'moderate' | 'high';
-      caloriesBurned: number;
-      notes?: string;
-    }) => {
+    mutationFn: async (activityData: ManualActivityInput) => {
       return apiClient.post('/activity/manual', activityData);
     },
     onSuccess: data => {

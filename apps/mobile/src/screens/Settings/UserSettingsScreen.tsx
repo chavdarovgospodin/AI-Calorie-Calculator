@@ -12,14 +12,20 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
-import { useActivity } from '@/contexts/ActivityContext';
+
+import { HealthAppType } from '@/types/health';
 import { styles } from './styles';
 import { useUserProfile } from '@/hooks/useUser';
+import {
+  useDisconnectHealthApp,
+  useSelectedHealthApp,
+} from '@/hooks/useHealthApp';
 
 const UserSettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
-  const { selectedApp, disconnectHealthApp } = useActivity();
+  const { data: selectedApp } = useSelectedHealthApp();
+  const disconnectHealthApp = useDisconnectHealthApp();
   const { data: profile, isLoading } = useUserProfile();
 
   const handleChangeHealthApp = () => {
@@ -37,13 +43,8 @@ const UserSettingsScreen: React.FC = () => {
         {
           text: 'Disconnect',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await disconnectHealthApp();
-              Alert.alert('Success', 'Health app disconnected successfully');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to disconnect health app');
-            }
+          onPress: () => {
+            disconnectHealthApp.mutate();
           },
         },
       ],
@@ -56,16 +57,31 @@ const UserSettingsScreen: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await logout();
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
-  const formatHealthApp = (app: string) => {
-    const appNames: Record<string, string> = {
-      healthkit: 'Apple Health',
-      googlefit: 'Google Fit',
-      huawei_health: 'Huawei Health',
-      samsung_health: 'Samsung Health',
-      manual: 'Manual Entry',
+  const formatHealthApp = (app: HealthAppType): string => {
+    const appNames: Record<HealthAppType, string> = {
+      [HealthAppType.APPLE_HEALTH]: 'Apple Health',
+      [HealthAppType.GOOGLE_FIT]: 'Google Fit',
+      [HealthAppType.HUAWEI_HEALTH]: 'Huawei Health',
+      [HealthAppType.SAMSUNG_HEALTH]: 'Samsung Health',
+      [HealthAppType.DEVICE_SENSORS]: 'Device Sensors',
+      [HealthAppType.MANUAL]: 'Manual Entry',
     };
     return appNames[app] || app;
   };
@@ -83,7 +99,7 @@ const UserSettingsScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        {/* User Info Section - използваме реалните стилове */}
+        {/* User Info Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Profile</Text>
           <View style={styles.infoCard}>
@@ -143,9 +159,22 @@ const UserSettingsScreen: React.FC = () => {
                   style={styles.disconnectButton}
                   onPress={handleDisconnectHealthApp}
                   activeOpacity={0.7}
+                  disabled={disconnectHealthApp.isPending}
                 >
-                  <Ionicons name="unlink-outline" size={18} color="#ff6b6b" />
-                  <Text style={styles.disconnectButtonText}>Disconnect</Text>
+                  {disconnectHealthApp.isPending ? (
+                    <ActivityIndicator size="small" color="#ff6b6b" />
+                  ) : (
+                    <>
+                      <Ionicons
+                        name="unlink-outline"
+                        size={18}
+                        color="#ff6b6b"
+                      />
+                      <Text style={styles.disconnectButtonText}>
+                        Disconnect
+                      </Text>
+                    </>
+                  )}
                 </TouchableOpacity>
               )}
             </View>

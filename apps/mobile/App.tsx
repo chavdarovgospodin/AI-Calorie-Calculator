@@ -4,7 +4,6 @@ import Toast from 'react-native-toast-message';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppNavigation } from './src/components';
 import { AuthProvider } from './src/contexts/AuthContext';
-import { ActivityProvider } from '@/contexts/ActivityContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,11 +37,9 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ActivityProvider>
-          <AppNavigation />
-          <StatusBar style="auto" />
-          <Toast />
-        </ActivityProvider>
+        <AppNavigation />
+        <StatusBar style="auto" />
+        <Toast />
       </AuthProvider>
     </QueryClientProvider>
   );

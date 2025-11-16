@@ -1,4 +1,3 @@
-// apps/mobile/src/screens/HealthAppSelection/HealthAppSelectionScreen.tsx
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -10,22 +9,14 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Import context
-import { useActivity } from '@/contexts/ActivityContext';
-
-// Import types
-import type { HealthAppType, HealthApp } from '@/services/deviceHealth';
-
 import { styles } from './styles';
+import { HealthApp, HealthAppType } from '@/types/health';
 
 const HealthAppSelectionScreen: React.FC = () => {
   const navigation = useNavigation();
-  const { availableApps, detectHealthApps, selectHealthApp, isLoading } =
-    useActivity();
 
   const [selectedAppType, setSelectedAppType] = useState<HealthAppType | null>(
     null

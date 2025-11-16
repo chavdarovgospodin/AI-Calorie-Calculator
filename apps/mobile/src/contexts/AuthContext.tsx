@@ -21,8 +21,8 @@ import {
   isTokenExpired,
   refreshTokens,
 } from '@/services/auth';
-import { RegisterData } from '@/services/interfaces';
 import { AppState, AppStateStatus } from 'react-native';
+import { RegisterData } from '@/types';
 
 const initialState: AuthState = {
   user: null,

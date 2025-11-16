@@ -10,9 +10,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useActivity } from '@/contexts/ActivityContext';
 import { styles } from './styles';
-import { HealthAppType } from '@/hooks/interfaces';
+import { HealthAppType } from '@/types';
 
 interface ActivitySummaryProps {
   date?: string;
@@ -24,14 +23,6 @@ const ActivitySummary: React.FC<ActivitySummaryProps> = ({
   onRefresh,
 }) => {
   const navigation = useNavigation();
-  const {
-    selectedApp,
-    isConnected,
-    todayActivity,
-    syncActivityData,
-    getActivitySummary,
-    isLoading,
-  } = useActivity();
 
   const [summary, setSummary] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);

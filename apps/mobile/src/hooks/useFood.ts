@@ -1,7 +1,6 @@
-// apps/mobile/src/hooks/api/useFood.ts
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/services/api';
-import { FoodAnalysisResult } from '@/services/interfaces';
+import { FoodAnalysisResult } from '@/types/food';
 import Toast from 'react-native-toast-message';
 
 // Analyze food text

@@ -1,3 +1,4 @@
+// apps/mobile/src/screens/ManualActivity/ManualActivityScreen.tsx
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -11,20 +12,13 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
-import Toast from 'react-native-toast-message';
-
-import { styles } from './styles';
 import { useAuth } from '@/contexts/AuthContext';
 import { calculateActivityCalories } from '@/services/deviceHealth';
+import { User } from '@/types/user';
+import { styles } from './styles';
 import { useAddManualActivity } from '@/hooks/useActivity';
 
-interface ActivityOption {
-  type: string;
-  label: string;
-  icon: string;
-}
-
-const ACTIVITY_OPTIONS: ActivityOption[] = [
+const ACTIVITY_OPTIONS = [
   { type: 'walking', label: 'Walking', icon: '🚶' },
   { type: 'running', label: 'Running', icon: '🏃' },
   { type: 'cycling', label: 'Cycling', icon: '🚴' },
@@ -39,78 +33,55 @@ const ACTIVITY_OPTIONS: ActivityOption[] = [
 const ManualActivityScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const addActivity = useAddManualActivity();
+
   const [activityType, setActivityType] = useState('walking');
   const [duration, setDuration] = useState('');
   const [intensity, setIntensity] = useState<'low' | 'moderate' | 'high'>(
     'moderate'
   );
-  const [calories, setCalories] = useState('');
+  const [manualCalories, setManualCalories] = useState('');
   const [notes, setNotes] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [estimatedCalories, setEstimatedCalories] = useState(0);
-  const setManualActivity = useAddManualActivity();
 
   useEffect(() => {
-    if (duration && !calories && user) {
+    if (duration && !manualCalories && user) {
       const durationNum = Number(duration);
-
-      const estimated = calculateActivityCalories(
-        {
-          activityType,
-          duration: durationNum,
-          intensity,
-        },
-        {
-          weight: user.weight,
-          height: user.height,
-          age: user.age,
-          gender: user.gender,
-          activity_level: user.activity_level,
-        }
-      );
-
-      setEstimatedCalories(estimated);
+      if (durationNum > 0) {
+        const estimated = calculateActivityCalories(
+          { activityType, duration: durationNum, intensity },
+          user as User
+        );
+        setEstimatedCalories(estimated);
+      }
     }
-  }, [duration, intensity, activityType, user]);
+  }, [duration, intensity, activityType, manualCalories, user]);
 
-  const handleSubmit = async () => {
-    if (!duration || isNaN(Number(duration))) {
-      Toast.show({
-        type: 'error',
-        text1: 'Invalid Duration',
-        text2: 'Please enter a valid duration in minutes',
-      });
+  const handleSubmit = () => {
+    const durationNum = Number(duration);
+
+    if (!duration || isNaN(durationNum) || durationNum <= 0) {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const activityData = {
+    const finalCalories = manualCalories
+      ? Number(manualCalories)
+      : estimatedCalories;
+
+    addActivity.mutate(
+      {
         activityType,
-        duration: Number(duration),
+        duration: durationNum,
         intensity,
-        caloriesBurned: calories ? Number(calories) : estimatedCalories,
-        notes,
-      };
-
-      await setManualActivity.mutate(activityData);
-
-      Toast.show({
-        type: 'success',
-        text1: 'Activity Logged!',
-        text2: `${activityData.caloriesBurned} calories burned`,
-      });
-
-      navigation.goBack();
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to log activity',
-        text2: 'Please try again',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+        caloriesBurned: finalCalories,
+        notes: notes || undefined,
+      },
+      {
+        onSuccess: () => {
+          navigation.goBack();
+        },
+      }
+    );
   };
 
   const selectedActivity = ACTIVITY_OPTIONS.find(a => a.type === activityType);
@@ -182,45 +153,41 @@ const ManualActivityScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>
             Calories Burned{' '}
             {estimatedCalories > 0 &&
-              !calories &&
+              !manualCalories &&
               `(Est. ${estimatedCalories})`}
           </Text>
           <TextInput
             style={styles.input}
-            placeholder={
-              estimatedCalories > 0 ? estimatedCalories.toString() : 'Optional'
-            }
-            value={calories}
-            onChangeText={setCalories}
+            placeholder={estimatedCalories.toString() || '0'}
+            value={manualCalories}
+            onChangeText={setManualCalories}
             keyboardType="numeric"
             maxLength={4}
           />
-          <Text style={styles.hint}>Leave empty to use our estimation</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notes (Optional)</Text>
+          <Text style={styles.sectionTitle}>Notes (optional)</Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Any additional details..."
+            style={[styles.input, styles.notesInput]}
+            placeholder="Add notes..."
             value={notes}
             onChangeText={setNotes}
             multiline
             numberOfLines={3}
-            textAlignVertical="top"
           />
         </View>
 
         <TouchableOpacity
           style={[
             styles.submitButton,
-            isLoading && styles.submitButtonDisabled,
+            addActivity.isPending && styles.buttonDisabled,
           ]}
           onPress={handleSubmit}
-          disabled={isLoading || !duration}
+          disabled={addActivity.isPending || !duration}
         >
-          {isLoading ? (
-            <ActivityIndicator color="white" />
+          {addActivity.isPending ? (
+            <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.submitButtonText}>Log Activity</Text>
           )}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import {
@@ -6,22 +6,21 @@ import {
   NativeStackNavigationProp,
 } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useAuthStatus } from '../../contexts/AuthContext';
-import { useActivity } from '../../contexts/ActivityContext';
 import LoadingScreen from '../LoadingScreen/LoadingScreen';
 import {
   EditProfileScreen,
   HomeScreen,
   LoginScreen,
   RegisterScreen,
+  HealthAppSelectionScreen,
+  ManualActivityScreen,
+  UserSettingsScreen,
+  FoodInputScreen,
+  ActivityScreen,
 } from '../../screens';
-import HealthAppSelectionScreen from '../../screens/HealthAppSelection/HealthAppSelectionScreen';
-import ManualActivityScreen from '../../screens/ManualActivity/ManualActivityScreen';
-import UserSettingsScreen from '../../screens/Settings/UserSettingsScreen';
-import FoodInputScreen from '../../screens/FoodInput/FoodInputScreen';
-import ActivityScreen from '../../screens/Activity/ActivityScreen';
+import { useSelectedHealthApp } from '@/hooks';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -35,6 +34,7 @@ export type RootStackParamList = {
   EditProfile: undefined;
 };
 
+// Поправка - трябва да е на един ред или правилно форматирано
 type HomeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'Home'
@@ -44,25 +44,21 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppNavigation = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuthStatus();
-  const {
-    selectedApp,
-    isConnected,
-    isLoading: activityLoading,
-  } = useActivity();
+  const { data: selectedApp, isLoading: healthAppLoading } =
+    useSelectedHealthApp();
 
   // Show loading while auth is checking
   if (authLoading) {
     return <LoadingScreen />;
   }
 
-  // Show loading while activity context is initializing (only for authenticated users)
-  if (isAuthenticated && activityLoading) {
+  // For authenticated users, wait for health app data to load
+  if (isAuthenticated && healthAppLoading) {
     return <LoadingScreen />;
   }
 
-  // Wait for activity context to load before deciding navigation
-  // Only require health app setup if user is authenticated and we've checked for saved preferences
-  const needsHealthAppSetup = isAuthenticated && !selectedApp && !isConnected;
+  // Check if user needs health app setup
+  const needsHealthAppSetup = isAuthenticated && !selectedApp;
 
   return (
     <NavigationContainer>
@@ -79,103 +75,80 @@ const AppNavigation = () => {
       >
         {isAuthenticated ? (
           <>
-            <Stack.Screen
-              name="Home"
-              component={HomeScreen}
-              options={({
-                navigation,
-              }: {
-                navigation: HomeScreenNavigationProp;
-              }) => ({
-                title: '🍎 Calorie Tracker',
-                headerRight: () => (
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('UserSettings')}
-                    style={{
-                      marginRight: 10,
-                      padding: 8,
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="settings-outline" size={24} color="#fff" />
-                  </TouchableOpacity>
-                ),
-              })}
-            />
-
-            <Stack.Screen
-              name="HealthAppSelection"
-              component={HealthAppSelectionScreen}
-              options={{
-                title: 'Activity Tracking',
-                headerShown: true,
-                // Allow back navigation if coming from settings
-                headerLeft: undefined,
-              }}
-            />
-
-            <Stack.Screen
-              name="FoodInput"
-              component={FoodInputScreen}
-              options={{
-                title: 'Add meal',
-                headerShown: true,
-              }}
-            />
-
-            <Stack.Screen
-              name="Activity"
-              component={ActivityScreen}
-              options={{
-                title: 'Activity',
-                headerShown: true,
-              }}
-            />
-
-            <Stack.Screen
-              name="ManualActivity"
-              component={ManualActivityScreen}
-              options={{
-                title: 'Log Activity',
-                headerShown: true,
-              }}
-            />
-
-            <Stack.Screen
-              name="UserSettings"
-              component={UserSettingsScreen}
-              options={{
-                title: 'Settings',
-                headerShown: true,
-              }}
-            />
-
-            <Stack.Screen
-              name="EditProfile"
-              component={EditProfileScreen}
-              options={{
-                title: 'Edit Profile',
-                headerShown: true,
-              }}
-            />
+            {needsHealthAppSetup ? (
+              <Stack.Screen
+                name="HealthAppSelection"
+                component={HealthAppSelectionScreen}
+                options={{
+                  title: 'Setup',
+                  headerShown: false,
+                }}
+              />
+            ) : (
+              <>
+                <Stack.Screen
+                  name="Home"
+                  component={HomeScreen}
+                  options={({ navigation }) => ({
+                    title: 'Dashboard',
+                    headerRight: () => (
+                      <TouchableOpacity
+                        onPress={() => navigation.navigate('UserSettings')}
+                        style={{ marginRight: 15 }}
+                      >
+                        <Ionicons
+                          name="settings-outline"
+                          size={24}
+                          color="#fff"
+                        />
+                      </TouchableOpacity>
+                    ),
+                  })}
+                />
+                <Stack.Screen
+                  name="FoodInput"
+                  component={FoodInputScreen}
+                  options={{ title: 'Add Food' }}
+                />
+                <Stack.Screen
+                  name="Activity"
+                  component={ActivityScreen}
+                  options={{ title: 'Activity' }}
+                />
+                <Stack.Screen
+                  name="ManualActivity"
+                  component={ManualActivityScreen}
+                  options={{ title: 'Log Activity' }}
+                />
+                <Stack.Screen
+                  name="UserSettings"
+                  component={UserSettingsScreen}
+                  options={{ title: 'Settings' }}
+                />
+                <Stack.Screen
+                  name="EditProfile"
+                  component={EditProfileScreen}
+                  options={{ title: 'Edit Profile' }}
+                />
+                <Stack.Screen
+                  name="HealthAppSelection"
+                  component={HealthAppSelectionScreen}
+                  options={{ title: 'Health Apps' }}
+                />
+              </>
+            )}
           </>
         ) : (
           <>
             <Stack.Screen
               name="Login"
               component={LoginScreen}
-              options={{
-                title: 'Login',
-                headerShown: false,
-              }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="Register"
               component={RegisterScreen}
-              options={{
-                title: 'Register',
-                headerShown: false,
-              }}
+              options={{ headerShown: false }}
             />
           </>
         )}
