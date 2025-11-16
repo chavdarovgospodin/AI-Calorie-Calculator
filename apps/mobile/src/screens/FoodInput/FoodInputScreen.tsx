@@ -23,19 +23,24 @@ import {
 } from 'react-native-image-picker';
 import { FoodAnalysisResult } from '@/services/interfaces';
 import { styles } from './styles';
-import { analyzeFood, analyzeFoodImage, saveFoodEntry } from '@/services/food';
+import {
+  useAnalyzeFood,
+  useAnalyzeFoodImage,
+  useSaveFoodEntry,
+} from '@/hooks/useFood';
 
 const FoodInputScreen: React.FC = () => {
   const navigation = useNavigation();
   const [inputMode, setInputMode] = useState<'text' | 'camera'>('text');
   const [textInput, setTextInput] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] =
-    useState<FoodAnalysisResult | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
 
-  const handleTextAnalysis = async () => {
+  // React Query hooks - no more isLoading states!
+  const analyzeFood = useAnalyzeFood();
+  const analyzeImage = useAnalyzeFoodImage();
+  const saveFood = useSaveFoodEntry();
+
+  const handleTextAnalysis = () => {
     if (!textInput.trim()) {
       Toast.show({
         type: 'error',
@@ -45,20 +50,7 @@ const FoodInputScreen: React.FC = () => {
       return;
     }
 
-    setIsAnalyzing(true);
-    try {
-      const result = await analyzeFood(textInput);
-      setAnalysisResult(result);
-    } catch (error) {
-      console.error('Text analysis error:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Analysis failed',
-        text2: 'Please try again',
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
+    analyzeFood.mutate(textInput);
   };
 
   const handleCamera = async () => {
@@ -80,10 +72,32 @@ const FoodInputScreen: React.FC = () => {
         setSelectedImage(asset.uri || null);
         setInputMode('camera');
         if (asset.base64) {
-          analyzeImage(asset.base64);
+          analyzeImage.mutate(asset.base64);
         }
       }
     });
+  };
+
+  const handleSaveFood = () => {
+    const result = analyzeFood.data || analyzeImage.data;
+
+    if (!result) return;
+
+    Alert.alert(
+      'Confirm',
+      `Add ${result.totalCalories} calories to today's log?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Add',
+          onPress: () => {
+            saveFood.mutate(result, {
+              onSuccess: () => navigation.goBack(),
+            });
+          },
+        },
+      ]
+    );
   };
 
   const handleGallery = async () => {
@@ -105,79 +119,20 @@ const FoodInputScreen: React.FC = () => {
         setSelectedImage(asset.uri || null);
         setInputMode('camera');
         if (asset.base64) {
-          analyzeImage(asset.base64);
+          analyzeImage.mutate(asset.base64);
         }
       }
     });
   };
 
-  const analyzeImage = async (base64: string) => {
-    setIsAnalyzing(true);
-    try {
-      const result = await analyzeFoodImage(base64);
-      setAnalysisResult(result);
-    } catch (error) {
-      console.error('Image analysis error:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Image analysis failed',
-        text2: 'Please try again',
-      });
-      setSelectedImage(null);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleSaveFood = async () => {
-    if (!analysisResult) return;
-
-    Alert.alert(
-      'Confirm',
-      `Add ${analysisResult.totalCalories} calories to today's log?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Add',
-          onPress: async () => {
-            setIsSaving(true);
-            try {
-              await saveFoodEntry({
-                foods: analysisResult.foods,
-                totalCalories: analysisResult.totalCalories,
-                protein: analysisResult.protein,
-                carbs: analysisResult.carbs,
-                fat: analysisResult.fat,
-              });
-
-              Toast.show({
-                type: 'success',
-                text1: 'Successfully added!',
-                text2: `${analysisResult.totalCalories} calories`,
-              });
-
-              navigation.goBack();
-            } catch (error) {
-              console.error('Save food entry error:', error);
-              Toast.show({
-                type: 'error',
-                text1: 'Failed to save',
-                text2: 'Please try again',
-              });
-            } finally {
-              setIsSaving(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
   const resetAnalysis = () => {
-    setAnalysisResult(null);
     setTextInput('');
     setSelectedImage(null);
   };
+
+  const analysisResult = analyzeFood.data || analyzeImage.data;
+  const isAnalyzing = analyzeFood.isPending || analyzeImage.isPending;
+  const isSaving = saveFood.isPending;
 
   return (
     <KeyboardAvoidingView

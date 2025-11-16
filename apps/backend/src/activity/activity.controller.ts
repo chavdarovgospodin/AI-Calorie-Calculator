@@ -127,42 +127,4 @@ export class ActivityController {
       throw error;
     }
   }
-
-  @Get('test-calculation')
-  async testCalorieCalculation(
-    @Query('activity') activity: string,
-    @Query('duration') duration: string,
-    @Query('intensity') intensity: 'low' | 'moderate' | 'high'
-  ) {
-    // Test endpoint for calorie calculation
-    const testEntry: ManualActivityEntryDto = {
-      activityType: activity || 'walking',
-      duration: parseInt(duration) || 30,
-      intensity: intensity || 'moderate',
-    };
-    return {
-      activity: testEntry.activityType,
-      duration: testEntry.duration,
-      intensity: testEntry.intensity,
-      estimatedCalories: this.calculateTestCalories(testEntry),
-    };
-  }
-
-  private calculateTestCalories(activity: ManualActivityEntryDto): number {
-    const baseCaloriesPerMinute = {
-      walking: { low: 3, moderate: 4, high: 5 },
-      running: { low: 8, moderate: 12, high: 16 },
-      cycling: { low: 5, moderate: 8, high: 12 },
-      swimming: { low: 6, moderate: 10, high: 14 },
-      gym: { low: 4, moderate: 6, high: 8 },
-    };
-    const activityKey = activity.activityType.toLowerCase();
-    const rates = baseCaloriesPerMinute[activityKey] || {
-      low: 3,
-      moderate: 4,
-      high: 5,
-    };
-    const caloriesPerMinute = rates[activity.intensity];
-    return Math.round(activity.duration * caloriesPerMinute);
-  }
 }

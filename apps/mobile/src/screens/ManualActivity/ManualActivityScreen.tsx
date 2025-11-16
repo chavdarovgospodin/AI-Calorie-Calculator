@@ -14,7 +14,9 @@ import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
 
 import { styles } from './styles';
-import { getTestCalculation, setManualActivity } from '@/services/health';
+import { useAuth } from '@/contexts/AuthContext';
+import { calculateActivityCalories } from '@/services/deviceHealth';
+import { useAddManualActivity } from '@/hooks/useActivity';
 
 interface ActivityOption {
   type: string;
@@ -36,6 +38,7 @@ const ACTIVITY_OPTIONS: ActivityOption[] = [
 
 const ManualActivityScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { user } = useAuth();
   const [activityType, setActivityType] = useState('walking');
   const [duration, setDuration] = useState('');
   const [intensity, setIntensity] = useState<'low' | 'moderate' | 'high'>(
@@ -45,29 +48,30 @@ const ManualActivityScreen: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [estimatedCalories, setEstimatedCalories] = useState(0);
+  const setManualActivity = useAddManualActivity();
 
   useEffect(() => {
-    if (duration && !calories) {
-      estimateCalories();
-    }
-  }, [duration, intensity, activityType]);
+    if (duration && !calories && user) {
+      const durationNum = Number(duration);
 
-  const estimateCalories = async () => {
-    if (!duration || isNaN(Number(duration))) return;
-
-    try {
-      const data = await getTestCalculation({
-        params: {
-          activity: activityType,
-          duration: duration,
-          intensity: intensity,
+      const estimated = calculateActivityCalories(
+        {
+          activityType,
+          duration: durationNum,
+          intensity,
         },
-      });
-      setEstimatedCalories(data.estimatedCalories);
-    } catch (error) {
-      console.error('Failed to estimate calories:', error);
+        {
+          weight: user.weight,
+          height: user.height,
+          age: user.age,
+          gender: user.gender,
+          activity_level: user.activity_level,
+        }
+      );
+
+      setEstimatedCalories(estimated);
     }
-  };
+  }, [duration, intensity, activityType, user]);
 
   const handleSubmit = async () => {
     if (!duration || isNaN(Number(duration))) {
@@ -89,7 +93,7 @@ const ManualActivityScreen: React.FC = () => {
         notes,
       };
 
-      await setManualActivity(activityData);
+      await setManualActivity.mutate(activityData);
 
       Toast.show({
         type: 'success',

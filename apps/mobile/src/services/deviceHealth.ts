@@ -1,6 +1,8 @@
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
+import { UserProfile } from './interfaces';
+import { ActivityLevel } from './enums';
 
 // ============================================================================
 // TYPES (temporary - ще ги преместим в types/health.ts после)
@@ -424,12 +426,19 @@ export const getTodayActivityData = async (
 /**
  * Calculate calories from manual activity
  */
-export const calculateCaloriesFromActivity = (activity: {
-  activityType: string;
-  duration: number;
-  intensity: 'low' | 'moderate' | 'high';
-}): number => {
-  // Базови калории per минута за различни дейности
+
+/**
+ * Calculate personalized calories burned based on activity and user profile
+ */
+export const calculateActivityCalories = (
+  activity: {
+    activityType: string;
+    duration: number;
+    intensity: 'low' | 'moderate' | 'high';
+  },
+  user: UserProfile
+): number => {
+  // Базови калории per минута за различни дейности (за 70кг човек)
   const calorieRates: Record<string, Record<string, number>> = {
     walking: { low: 3, moderate: 4, high: 5 },
     running: { low: 8, moderate: 10, high: 12 },
@@ -438,12 +447,45 @@ export const calculateCaloriesFromActivity = (activity: {
     gym: { low: 4, moderate: 6, high: 8 },
     yoga: { low: 2, moderate: 3, high: 4 },
     dancing: { low: 3, moderate: 5, high: 7 },
-    default: { low: 3, moderate: 4, high: 5 },
+    sports: { low: 4, moderate: 6, high: 8 },
+    other: { low: 3, moderate: 4, high: 5 },
   };
 
   const activityType = activity.activityType.toLowerCase();
-  const rates = calorieRates[activityType] || calorieRates.default;
-  const rate = rates[activity.intensity];
+  const rates = calorieRates[activityType] || calorieRates.other;
+  const baseRate = rates[activity.intensity];
 
-  return Math.round(rate * activity.duration);
+  const weightFactor = user.weight / 70;
+
+  // По-безопасен подход със switch
+  let activityMultiplier: number;
+  switch (user.activity_level) {
+    case ActivityLevel.SEDENTARY:
+      activityMultiplier = 0.9;
+      break;
+    case ActivityLevel.LIGHTLY_ACTIVE:
+      activityMultiplier = 1.0;
+      break;
+    case ActivityLevel.MODERATELY_ACTIVE:
+      activityMultiplier = 1.1;
+      break;
+    case ActivityLevel.VERY_ACTIVE:
+      activityMultiplier = 1.2;
+      break;
+    case ActivityLevel.EXTREMELY_ACTIVE:
+      activityMultiplier = 1.3;
+      break;
+    default:
+      activityMultiplier = 1.0; // fallback за неизвестни стойности
+  }
+
+  const genderFactor = user.gender === 'male' ? 1.05 : 1.0;
+
+  const ageFactor =
+    user.age < 30 ? 1.05 : user.age < 40 ? 1.0 : user.age < 50 ? 0.95 : 0.9;
+
+  const caloriesPerMinute =
+    baseRate * weightFactor * activityMultiplier * genderFactor * ageFactor;
+
+  return Math.round(caloriesPerMinute * activity.duration);
 };

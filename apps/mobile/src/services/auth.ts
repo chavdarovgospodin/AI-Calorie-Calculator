@@ -25,8 +25,10 @@ export const login = async (
 
   try {
     await Promise.all([
-      AsyncStorage.setItem('access_token', response.access_token),
-      AsyncStorage.setItem('user', JSON.stringify(response.user)),
+      AsyncStorage.setItem(TOKEN_KEYS.ACCESS_TOKEN, response.access_token),
+      AsyncStorage.setItem(TOKEN_KEYS.REFRESH_TOKEN, response.refresh_token), // ✅ ДОБАВЯМЕ
+      AsyncStorage.setItem(TOKEN_KEYS.USER, JSON.stringify(response.user)),
+      AsyncStorage.setItem(TOKEN_KEYS.TOKEN_EXPIRY, calculateTokenExpiry()), // ✅ ДОБАВЯМЕ
     ]);
   } catch (error) {
     throw error;
@@ -53,8 +55,10 @@ export const register = async (
 
   try {
     await Promise.all([
-      AsyncStorage.setItem('access_token', response.access_token),
-      AsyncStorage.setItem('user', JSON.stringify(response.user)),
+      AsyncStorage.setItem(TOKEN_KEYS.ACCESS_TOKEN, response.access_token),
+      AsyncStorage.setItem(TOKEN_KEYS.REFRESH_TOKEN, response.refresh_token), // ✅ ДОБАВЯМЕ
+      AsyncStorage.setItem(TOKEN_KEYS.USER, JSON.stringify(response.user)),
+      AsyncStorage.setItem(TOKEN_KEYS.TOKEN_EXPIRY, calculateTokenExpiry()), // ✅ ДОБАВЯМЕ
     ]);
   } catch (error) {
     throw error;

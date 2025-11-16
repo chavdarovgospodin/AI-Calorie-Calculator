@@ -3,8 +3,21 @@ import { ActivityLevel, Gender, Goal } from './enums';
 export interface User {
   id: string;
   email: string;
+  age: number;
+  gender: string;
+  height: number;
+  weight: number;
+  goal: string;
   daily_calorie_goal: number;
+  activity_level: string;
+  created_at: string;
+  updated_at: string;
 }
+
+export type UserProfile = Pick<
+  User,
+  'age' | 'gender' | 'height' | 'weight' | 'activity_level'
+>;
 
 export interface AuthResponse {
   access_token: string;

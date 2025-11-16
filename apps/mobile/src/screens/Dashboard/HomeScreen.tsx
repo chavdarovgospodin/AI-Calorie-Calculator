@@ -12,8 +12,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { styles } from './styles';
-import { getDailyLogs } from '@/services/health';
 import { LoadingScreen, RecentFood } from '@/components';
+import { useDashboard } from '@/hooks/useDashboard';
 
 export interface FoodEntry {
   id: string;
@@ -42,28 +42,26 @@ export interface DailyDashboard {
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-  const { user, isLoading } = useAuth();
-  const [dashboard, setDashboard] = useState<DailyDashboard | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const { user } = useAuth();
 
-  const loadDashboard = useCallback(async () => {
-    try {
-      const data: DailyDashboard = await getDailyLogs();
-      setDashboard(data);
-    } catch (error) {
-      console.error('❌ Failed to load dashboard:', error);
-    }
-  }, []);
+  const {
+    data: dashboard,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+  } = useDashboard();
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadDashboard();
-    setRefreshing(false);
-  };
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Failed to load dashboard</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+          <Text>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   const handleFoodInput = () => {
     navigation.navigate('FoodInput');
@@ -80,11 +78,6 @@ const HomeScreen = () => {
     if (percentage < 90) return '#4CAF50';
     if (percentage < 100) return '#FF9800';
     return '#F44336';
-  };
-
-  const getNetCalories = () => {
-    if (!dashboard) return 0;
-    return dashboard.totalCaloriesConsumed - dashboard.caloriesBurned;
   };
 
   const handleDeleteFood = useCallback((foodId: string) => {
@@ -105,7 +98,7 @@ const HomeScreen = () => {
     );
   }, []);
 
-  if (refreshing || isLoading) {
+  if (isRefetching || isLoading) {
     return <LoadingScreen />;
   }
 
@@ -114,7 +107,7 @@ const HomeScreen = () => {
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
       }
     >
       <View style={styles.header}>
