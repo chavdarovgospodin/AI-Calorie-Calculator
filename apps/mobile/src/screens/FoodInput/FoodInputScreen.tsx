@@ -21,7 +21,6 @@ import {
   ImagePickerResponse,
   ImageLibraryOptions,
 } from 'react-native-image-picker';
-import { FoodAnalysisResult } from '@/services/interfaces';
 import { styles } from './styles';
 import {
   useAnalyzeFood,
@@ -35,7 +34,6 @@ const FoodInputScreen: React.FC = () => {
   const [textInput, setTextInput] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // React Query hooks - no more isLoading states!
   const analyzeFood = useAnalyzeFood();
   const analyzeImage = useAnalyzeFoodImage();
   const saveFood = useSaveFoodEntry();

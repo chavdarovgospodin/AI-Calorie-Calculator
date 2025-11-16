@@ -14,13 +14,13 @@ import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
-import { RegisterData } from '@/services/interfaces';
 import { ActivityLevel, Gender, Goal } from '@/services/enums';
 
 import { registerStyles as styles } from './styles';
-import { RegisterFormData } from './interfaces';
+import { RegisterFormData } from './types';
+import { RegisterData } from '@/types';
 
-const RegisterScreen: React.FC = () => {
+const RegisterScreen = () => {
   const navigation = useNavigation();
   const { register, isLoading, error, clearError } = useAuth();
 

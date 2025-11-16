@@ -21,24 +21,7 @@ import {
   ActivityScreen,
 } from '../../screens';
 import { useSelectedHealthApp } from '@/hooks';
-
-export type RootStackParamList = {
-  Login: undefined;
-  Home: undefined;
-  Register: undefined;
-  FoodInput: undefined;
-  Activity: undefined;
-  HealthAppSelection: undefined;
-  ManualActivity: undefined;
-  UserSettings: undefined;
-  EditProfile: undefined;
-};
-
-// Поправка - трябва да е на един ред или правилно форматирано
-type HomeScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'Home'
->;
+import { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

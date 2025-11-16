@@ -12,7 +12,7 @@ import { LoadingScreen } from '@/components';
 import { styles } from './styles';
 import { useActivitySummary } from '@/hooks/useActivity';
 
-const ActivityScreen: React.FC = () => {
+const ActivityScreen = () => {
   const navigation = useNavigation();
   const today = new Date().toISOString().split('T')[0];
 

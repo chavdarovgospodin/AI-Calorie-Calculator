@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,23 +9,21 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { styles } from './styles';
 import { HealthApp, HealthAppType } from '@/types/health';
+import { useAvailableHealthApps, useSelectHealthApp } from '@/hooks';
 
-const HealthAppSelectionScreen: React.FC = () => {
+const HealthAppSelectionScreen = () => {
   const navigation = useNavigation();
+
+  const { data: availableApps = [], isLoading } = useAvailableHealthApps();
+  const selectHealthApp = useSelectHealthApp();
 
   const [selectedAppType, setSelectedAppType] = useState<HealthAppType | null>(
     null
   );
-  const [isConnecting, setIsConnecting] = useState(false);
-
-  useEffect(() => {
-    detectHealthApps();
-  }, [detectHealthApps]);
 
   const handleAppSelect = async (app: HealthApp) => {
     // Check if app is available
@@ -39,39 +37,21 @@ const HealthAppSelectionScreen: React.FC = () => {
     }
 
     setSelectedAppType(app.source);
-    setIsConnecting(true);
 
     try {
-      await selectHealthApp(app.source);
+      await selectHealthApp.mutateAsync(app.source);
 
-      Toast.show({
-        type: 'success',
-        text1: 'Connected!',
-        text2: `Successfully connected to ${app.name}`,
-      });
-
-      // Navigate to Home
       navigation.reset({
         index: 0,
         routes: [{ name: 'Home' as never }],
       });
     } catch (error) {
       console.error('Failed to select health app:', error);
-
-      Toast.show({
-        type: 'error',
-        text1: 'Connection Failed',
-        text2: `Failed to connect to ${app.name}. Please check permissions.`,
-      });
-
       setSelectedAppType(null);
-    } finally {
-      setIsConnecting(false);
     }
   };
 
   const handleSkip = async () => {
-    // Save skip status
     await AsyncStorage.setItem('healthSetupSkipped', 'true');
 
     // For web testing, directly navigate to Home
@@ -131,7 +111,7 @@ const HealthAppSelectionScreen: React.FC = () => {
                     styles.disabledCard,
                 ]}
                 onPress={() => handleAppSelect(app)}
-                disabled={isConnecting}
+                disabled={selectHealthApp.isPending}
               >
                 <View style={styles.appIconContainer}>
                   <Text style={styles.appIcon}>{app.icon}</Text>
@@ -143,9 +123,10 @@ const HealthAppSelectionScreen: React.FC = () => {
                     <Text style={styles.notAvailableText}>Not installed</Text>
                   )}
                 </View>
-                {selectedAppType === app.source && isConnecting && (
-                  <ActivityIndicator size="small" color="#007AFF" />
-                )}
+                {selectedAppType === app.source &&
+                  selectHealthApp.isPending && (
+                    <ActivityIndicator size="small" color="#007AFF" />
+                  )}
               </TouchableOpacity>
             ))}
           </View>

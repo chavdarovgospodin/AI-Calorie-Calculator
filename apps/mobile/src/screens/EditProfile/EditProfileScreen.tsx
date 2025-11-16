@@ -3,7 +3,7 @@ import { View, Text, SafeAreaView, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { styles } from './styles';
 
-const EditProfileScreen: React.FC = () => {
+const EditProfileScreen = () => {
   const navigation = useNavigation();
 
   return (

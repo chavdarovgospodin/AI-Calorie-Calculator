@@ -3,13 +3,10 @@ import { apiClient } from '@/services/api';
 import { FoodAnalysisResult } from '@/types/food';
 import Toast from 'react-native-toast-message';
 
-// Analyze food text
 export const useAnalyzeFood = () => {
-  return useMutation({
+  return useMutation<FoodAnalysisResult, Error, string>({
     mutationFn: async (description: string) => {
-      return apiClient.post<FoodAnalysisResult>('/food/analyze', {
-        description,
-      });
+      return apiClient.post('/food/analyze', { description });
     },
     onError: (error: any) => {
       Toast.show({
@@ -21,13 +18,10 @@ export const useAnalyzeFood = () => {
   });
 };
 
-// Analyze food image
 export const useAnalyzeFoodImage = () => {
-  return useMutation({
+  return useMutation<FoodAnalysisResult, Error, string>({
     mutationFn: async (imageBase64: string) => {
-      return apiClient.post<FoodAnalysisResult>('/food/analyze-image', {
-        imageBase64,
-      });
+      return apiClient.post('/food/analyze-image', { imageBase64 });
     },
     onError: (error: any) => {
       Toast.show({
@@ -39,11 +33,10 @@ export const useAnalyzeFoodImage = () => {
   });
 };
 
-// Save food entry
 export const useSaveFoodEntry = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<any, Error, FoodAnalysisResult>({
     mutationFn: async (foodData: FoodAnalysisResult) => {
       return apiClient.post('/food/entries', {
         foods: foodData.foods,
@@ -54,7 +47,6 @@ export const useSaveFoodEntry = () => {
       });
     },
     onSuccess: () => {
-      // Инвалидираме dashboard кеша
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
 
       Toast.show({

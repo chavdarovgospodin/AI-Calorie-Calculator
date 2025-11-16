@@ -1,4 +1,3 @@
-// apps/mobile/src/services/deviceHealth.ts - ПОЧИСТЕН
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
@@ -6,7 +5,6 @@ import { HealthApp, HealthAppType, ActivityData } from '@/types/health';
 import { User } from '@/types/user';
 import { ActivityLevel } from './enums';
 
-// Константи
 const HEALTH_APP_NAMES: Record<HealthAppType, string> = {
   [HealthAppType.APPLE_HEALTH]: 'Apple Health',
   [HealthAppType.GOOGLE_FIT]: 'Google Fit',

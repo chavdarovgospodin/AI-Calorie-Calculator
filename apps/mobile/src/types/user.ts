@@ -16,7 +16,12 @@ export interface User {
 
 export type UserProfile = Pick<
   User,
-  'age' | 'gender' | 'height' | 'weight' | 'activity_level'
+  | 'age'
+  | 'gender'
+  | 'height'
+  | 'weight'
+  | 'activity_level'
+  | 'daily_calorie_goal'
 >;
 
 export interface RegisterData {

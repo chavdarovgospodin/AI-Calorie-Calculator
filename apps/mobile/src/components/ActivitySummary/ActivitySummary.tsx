@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -12,46 +12,39 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { styles } from './styles';
 import { HealthAppType } from '@/types';
+import {
+  useActivitySummary,
+  useSelectedHealthApp,
+  useSyncHealthApp,
+} from '@/hooks';
+import { ActivitySummaryProps } from './types';
 
-interface ActivitySummaryProps {
-  date?: string;
-  onRefresh?: () => void;
-}
-
-const ActivitySummary: React.FC<ActivitySummaryProps> = ({
-  date,
-  onRefresh,
-}) => {
+const ActivitySummary = ({ date, onRefresh }: ActivitySummaryProps) => {
   const navigation = useNavigation();
 
-  const [summary, setSummary] = useState<any>(null);
-  const [refreshing, setRefreshing] = useState(false);
-
-  useEffect(() => {
-    loadActivitySummary();
-  }, [date]);
-
-  const loadActivitySummary = async () => {
-    const summaryData = await getActivitySummary(date);
-    setSummary(summaryData);
-  };
+  // React Query hooks
+  const {
+    data: summary,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useActivitySummary(date);
+  const { data: selectedApp } = useSelectedHealthApp();
+  const syncHealthApp = useSyncHealthApp();
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    await syncActivityData();
-    await loadActivitySummary();
+    await refetch();
     if (onRefresh) {
       onRefresh();
     }
-    setRefreshing(false);
   };
 
   const handleConnectApp = () => {
-    navigation.navigate('HealthAppSelection');
+    navigation.navigate('HealthAppSelection' as never);
   };
 
   const handleManualEntry = () => {
-    navigation.navigate('ManualActivity');
+    navigation.navigate('ManualActivity' as never);
   };
 
   const getSourceName = (source: HealthAppType) => {
@@ -80,7 +73,8 @@ const ActivitySummary: React.FC<ActivitySummaryProps> = ({
     return `${distance.toFixed(2)}km`;
   };
 
-  if (!isConnected && !selectedApp) {
+  // Empty state - no health app connected
+  if (!selectedApp || selectedApp === HealthAppType.MANUAL) {
     return (
       <View style={styles.container}>
         <View style={styles.emptyState}>
@@ -122,7 +116,7 @@ const ActivitySummary: React.FC<ActivitySummaryProps> = ({
     <ScrollView
       style={styles.container}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        <RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} />
       }
     >
       <View style={styles.header}>

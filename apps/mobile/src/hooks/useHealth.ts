@@ -1,8 +1,6 @@
-// apps/mobile/src/hooks/api/useHealth.ts
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/services/api';
 
-// Get weekly summary
 export const useWeeklySummary = () => {
   return useQuery({
     queryKey: ['weekly-summary'],
@@ -11,7 +9,6 @@ export const useWeeklySummary = () => {
   });
 };
 
-// Get monthly statistics
 export const useMonthlyStats = (year?: number, month?: number) => {
   const currentDate = new Date();
   const queryYear = year || currentDate.getFullYear();
@@ -27,7 +24,6 @@ export const useMonthlyStats = (year?: number, month?: number) => {
   });
 };
 
-// Get progress data
 export const useProgress = (days: number = 30) => {
   return useQuery({
     queryKey: ['progress', days],
@@ -36,7 +32,6 @@ export const useProgress = (days: number = 30) => {
   });
 };
 
-// Create or update daily log
 export const useCreateDailyLog = () => {
   return useMutation({
     mutationFn: (logData: {

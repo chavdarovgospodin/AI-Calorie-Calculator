@@ -30,7 +30,7 @@ const ACTIVITY_OPTIONS = [
   { type: 'other', label: 'Other', icon: '🏃' },
 ];
 
-const ManualActivityScreen: React.FC = () => {
+const ManualActivityScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
   const addActivity = useAddManualActivity();
@@ -169,7 +169,7 @@ const ManualActivityScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Notes (optional)</Text>
           <TextInput
-            style={[styles.input, styles.notesInput]}
+            style={[styles.input]}
             placeholder="Add notes..."
             value={notes}
             onChangeText={setNotes}
@@ -179,10 +179,7 @@ const ManualActivityScreen: React.FC = () => {
         </View>
 
         <TouchableOpacity
-          style={[
-            styles.submitButton,
-            addActivity.isPending && styles.buttonDisabled,
-          ]}
+          style={[styles.submitButton]}
           onPress={handleSubmit}
           disabled={addActivity.isPending || !duration}
         >

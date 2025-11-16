@@ -1,23 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/services/api';
-import { ManualActivityInput } from '@/types/health';
+import { ActivitySummary, ManualActivityInput } from '@/types/health';
 import Toast from 'react-native-toast-message';
+import { ActivitySource } from './types';
 
-// Get activity summary for a date
 export const useActivitySummary = (date?: string) => {
-  return useQuery({
+  return useQuery<ActivitySummary>({
     queryKey: ['activity-summary', date || 'today'],
     queryFn: async () => {
-      const response = await apiClient.get('/activity/summary', {
+      return apiClient.get('/activity/summary', {
         params: { date: date || new Date().toISOString().split('T')[0] },
       });
-      return response;
     },
-    refetchInterval: 5 * 60 * 1000, // Auto-refresh every 5 minutes
+    refetchInterval: 5 * 60 * 1000,
   });
 };
 
-// Add manual activity
 export const useAddManualActivity = () => {
   const queryClient = useQueryClient();
 
@@ -25,8 +23,7 @@ export const useAddManualActivity = () => {
     mutationFn: async (activityData: ManualActivityInput) => {
       return apiClient.post('/activity/manual', activityData);
     },
-    onSuccess: data => {
-      // Invalidate related queries
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['activity-summary'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
 
@@ -67,16 +64,14 @@ export const useSyncHealthApp = () => {
   });
 };
 
-// Get available activity sources
 export const useActivitySources = (platform: 'ios' | 'android') => {
-  return useQuery({
+  return useQuery<ActivitySource[]>({
     queryKey: ['activity-sources', platform],
     queryFn: () => apiClient.get(`/activity/sources?platform=${platform}`),
-    staleTime: 60 * 60 * 1000, // Cache for 1 hour
+    staleTime: 60 * 60 * 1000,
   });
 };
 
-// Update activity preferences
 export const useUpdateActivityPreferences = () => {
   const queryClient = useQueryClient();
 

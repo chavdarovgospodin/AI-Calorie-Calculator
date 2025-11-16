@@ -11,7 +11,7 @@ import {
   AuthContextType,
   AuthProviderProps,
   AuthState,
-} from './interfaces';
+} from './types';
 import {
   getStoredUser,
   isAuthenticated,
@@ -83,7 +83,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
   const appState = useRef(AppState.currentState);
-  // const navigation = useNavigation();
 
   useEffect(() => {
     checkStoredAuth();

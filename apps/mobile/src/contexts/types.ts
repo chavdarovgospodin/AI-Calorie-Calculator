@@ -1,6 +1,5 @@
+import { RegisterData, User } from '@/types';
 import { ReactNode } from 'react';
-
-import { RegisterData, User } from '@/services/interfaces';
 
 export interface AuthState {
   user: User | null;

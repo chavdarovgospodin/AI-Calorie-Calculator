@@ -1,11 +1,9 @@
-// apps/mobile/src/hooks/api/useHealthApp.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as deviceHealth from '@/services/deviceHealth';
 import { HealthAppType, HealthApp } from '@/types/health';
 import Toast from 'react-native-toast-message';
 
-// Get currently selected health app
 export const useSelectedHealthApp = () => {
   return useQuery({
     queryKey: ['selected-health-app'],
@@ -17,7 +15,6 @@ export const useSelectedHealthApp = () => {
   });
 };
 
-// Get available health apps
 export const useAvailableHealthApps = () => {
   return useQuery({
     queryKey: ['available-health-apps'],
@@ -28,13 +25,11 @@ export const useAvailableHealthApps = () => {
   });
 };
 
-// Select/connect health app
 export const useSelectHealthApp = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (appType: HealthAppType) => {
-      // Request permissions if not manual
       if (appType !== HealthAppType.MANUAL) {
         const hasPermissions = await deviceHealth.requestPermissions(appType);
         if (!hasPermissions) {
@@ -42,7 +37,6 @@ export const useSelectHealthApp = () => {
         }
       }
 
-      // Save selection
       await AsyncStorage.setItem('selectedHealthApp', appType);
       return appType;
     },
@@ -66,7 +60,6 @@ export const useSelectHealthApp = () => {
   });
 };
 
-// Disconnect health app
 export const useDisconnectHealthApp = () => {
   const queryClient = useQueryClient();
 

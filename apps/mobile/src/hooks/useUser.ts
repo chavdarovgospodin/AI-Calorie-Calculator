@@ -1,39 +1,37 @@
-// apps/mobile/src/hooks/api/useUser.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/services/api';
-import { useAuth } from '@/contexts/AuthContext';
+import { User } from '@/types/user';
 import Toast from 'react-native-toast-message';
 
-// Get user profile
 export const useUserProfile = () => {
-  return useQuery({
+  return useQuery<User>({
     queryKey: ['user-profile'],
     queryFn: () => apiClient.get('/users/profile'),
     staleTime: 10 * 60 * 1000, // Fresh for 10 minutes
   });
 };
 
-// Update user profile
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
-  return useMutation({
-    mutationFn: (profileData: {
+  return useMutation<
+    User,
+    Error,
+    {
       age?: number;
       gender?: string;
       height?: number;
       weight?: number;
       goal?: string;
       activity_level?: string;
-    }) => {
+    }
+  >({
+    mutationFn: profileData => {
       return apiClient.put('/users/profile', profileData);
     },
     onSuccess: data => {
-      // Update cached profile
       queryClient.setQueryData(['user-profile'], data);
 
-      // Invalidate dashboard as calorie goals may have changed
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
 
       Toast.show({
@@ -45,7 +43,6 @@ export const useUpdateProfile = () => {
   });
 };
 
-// Delete user account
 export const useDeleteAccount = () => {
   return useMutation({
     mutationFn: () => apiClient.delete('/users/profile'),
@@ -59,7 +56,6 @@ export const useDeleteAccount = () => {
   });
 };
 
-// Get user statistics
 export const useUserStats = (period: 'week' | 'month' | 'year' = 'week') => {
   return useQuery({
     queryKey: ['user-stats', period],
