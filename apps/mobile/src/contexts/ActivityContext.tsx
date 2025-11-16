@@ -4,18 +4,15 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useAuth } from './AuthContext';
 import { apiClient } from '@/services/api';
-import Constants from 'expo-constants';
-import {
-  ActivityData,
-  HealthApp,
-  HealthAppType,
-} from '@/services/healthService/interfaces';
-import HealthAppsManager from '@/services/healthService/HealthAppsManager';
+
+import { useHealthApps } from '@/hooks/useHealthApps';
+import { ActivityData, HealthApp, HealthAppType } from '@/hooks/interfaces';
 
 interface ActivityContextType {
   availableApps: HealthApp[];
@@ -39,61 +36,17 @@ export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { isAuthenticated, user } = useAuth();
-  const [availableApps, setAvailableApps] = useState<HealthApp[]>([]);
-  const [selectedApp, setSelectedApp] = useState<HealthAppType | null>(null);
+  const healthApps = useHealthApps();
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [todayActivity, setTodayActivity] = useState<ActivityData | null>(null);
-
-  // Load saved preferences on mount
-  useEffect(() => {
-    loadSavedPreferences();
-  }, []);
-
-  // Auto-detect apps when user logs in
-  useEffect(() => {
-    if (user) {
-      detectHealthApps();
-    }
-  }, [user]);
-
-  // Auto-sync when app is selected
-  useEffect(() => {
-    if (selectedApp && isConnected) {
-      syncActivityData();
-      // Set up periodic sync every 30 minutes
-      const interval = setInterval(syncActivityData, 30 * 60 * 1000);
-      return () => clearInterval(interval);
-    }
-  }, [selectedApp, isConnected]);
-
-  const loadSavedPreferences = async () => {
-    try {
-      const savedApp = await AsyncStorage.getItem('selectedHealthApp');
-      const savedConnected = await AsyncStorage.getItem('healthAppConnected');
-
-      if (savedApp) {
-        setSelectedApp(savedApp as HealthAppType);
-        setIsConnected(savedConnected === 'true');
-      }
-    } catch (error) {
-      console.error('Failed to load preferences:', error);
-    }
-  };
-
-  const isExpoGo = Constants?.appOwnership === 'expo';
+  const syncInProgressRef = useRef(false);
+  const lastSyncDateRef = useRef<string | null>(null);
 
   const detectHealthApps = useCallback(async () => {
     setIsLoading(true);
     try {
-      const apps = await HealthAppsManager.detectAvailableApps();
-      setAvailableApps(apps);
-
-      if (isExpoGo) {
-        console.log('Running in Expo Go - manual selection only');
-        setIsLoading(false);
-        return;
-      }
+      const apps = await healthApps.detectAvailableApps();
 
       // Get preferences from backend if user is logged in
       if (isAuthenticated) {
@@ -101,10 +54,23 @@ export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({
           const { data } = await apiClient.get('/activity/preferences');
           if (data.preferredActivitySource) {
             const preferredApp = apps.find(
-              app => app.type === data.preferredActivitySource
+              app => app.source === data.preferredActivitySource
             );
             if (preferredApp && preferredApp.isAvailable) {
-              await selectHealthApp(data.preferredActivitySource);
+              // Connect to the health app
+              const connected = await healthApps.connectApp(
+                data.preferredActivitySource
+              );
+
+              if (connected) {
+                healthApps.setSelectedApp(data.preferredActivitySource);
+                setIsConnected(true);
+                await AsyncStorage.setItem(
+                  'selectedHealthApp',
+                  data.preferredActivitySource
+                );
+                await AsyncStorage.setItem('healthAppConnected', 'true');
+              }
             }
           }
         } catch (error) {
@@ -116,18 +82,17 @@ export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated]); // Simplified dependencies - functions from healthApps hook are stable
 
   const selectHealthApp = useCallback(
     async (appType: HealthAppType): Promise<boolean> => {
       setIsLoading(true);
       try {
         // Connect to the health app
-        const connected = await HealthAppsManager.connectApp(appType);
+        const connected = await healthApps.connectApp(appType);
 
         if (connected) {
-          HealthAppsManager.setSelectedApp(appType);
-          setSelectedApp(appType);
+          healthApps.setSelectedApp(appType);
           setIsConnected(true);
 
           // Save to local storage
@@ -144,9 +109,7 @@ export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({
             });
           }
 
-          // Initial sync
-          await syncActivityData();
-
+          // Initial sync will be triggered by useEffect
           return true;
         }
 
@@ -158,15 +121,30 @@ export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsLoading(false);
       }
     },
-    [isAuthenticated]
+    [isAuthenticated] // Simplified - healthApps functions are stable
   );
 
   const syncActivityData = useCallback(async () => {
-    if (!selectedApp || !isAuthenticated) return;
+    const currentSelectedApp = healthApps.selectedApp;
+    if (!currentSelectedApp || !isAuthenticated) return;
 
+    // Prevent concurrent syncs
+    if (syncInProgressRef.current) {
+      console.log('Sync already in progress, skipping...');
+      return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    // Prevent multiple syncs for the same day
+    if (lastSyncDateRef.current === today) {
+      console.log('Already synced today, skipping...');
+      return;
+    }
+
+    syncInProgressRef.current = true;
     try {
       // Get today's activity data from health app
-      const activityData = await HealthAppsManager.getTodayActivityData();
+      const activityData = await healthApps.getTodayActivityData();
 
       if (activityData) {
         setTodayActivity(activityData);
@@ -181,11 +159,15 @@ export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({
           date: activityData.date,
           activityType: activityData.activityType,
         });
+
+        lastSyncDateRef.current = today;
       }
     } catch (error) {
       console.error('Failed to sync activity data:', error);
+    } finally {
+      syncInProgressRef.current = false;
     }
-  }, [selectedApp, isAuthenticated]);
+  }, [isAuthenticated]); // Simplified - capture healthApps.selectedApp in closure
 
   const getActivitySummary = useCallback(
     async (date?: string) => {
@@ -205,7 +187,7 @@ export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const disconnectHealthApp = useCallback(async () => {
     try {
-      setSelectedApp(null);
+      healthApps.setSelectedApp(null);
       setIsConnected(false);
       setTodayActivity(null);
 
@@ -222,11 +204,217 @@ export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       console.error('Failed to disconnect health app:', error);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated]); // Simplified - healthApps.setSelectedApp is stable
+
+  // Load saved preferences on mount (only once)
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPrefs = async () => {
+      setIsLoading(true);
+      try {
+        const savedApp = await AsyncStorage.getItem('selectedHealthApp');
+        const savedConnected = await AsyncStorage.getItem('healthAppConnected');
+
+        if (isMounted && savedApp) {
+          healthApps.setSelectedApp(savedApp as HealthAppType);
+          setIsConnected(savedConnected === 'true');
+          console.log('✅ Loaded saved health app preference:', savedApp);
+        } else if (isMounted) {
+          console.log('ℹ️ No saved health app preference found');
+        }
+      } catch (error) {
+        console.error('Failed to load preferences:', error);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadPrefs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty deps - only run once on mount
+
+  // Auto-detect apps when user logs in
+  useEffect(() => {
+    if (!user || !isAuthenticated) return;
+
+    let isMounted = true;
+
+    const detect = async () => {
+      setIsLoading(true);
+      try {
+        const apps = await healthApps.detectAvailableApps();
+
+        // Get preferences from backend if user is logged in
+        if (isMounted && isAuthenticated) {
+          try {
+            const { data } = await apiClient.get('/activity/preferences');
+            if (data.preferredActivitySource) {
+              const preferredApp = apps.find(
+                app => app.source === data.preferredActivitySource
+              );
+              if (preferredApp && preferredApp.isAvailable) {
+                // Connect to the health app
+                const connected = await healthApps.connectApp(
+                  data.preferredActivitySource
+                );
+
+                if (isMounted && connected) {
+                  healthApps.setSelectedApp(data.preferredActivitySource);
+                  setIsConnected(true);
+                  await AsyncStorage.setItem(
+                    'selectedHealthApp',
+                    data.preferredActivitySource
+                  );
+                  await AsyncStorage.setItem('healthAppConnected', 'true');
+                }
+              }
+            }
+          } catch (error) {
+            console.log('No saved preferences');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to detect health apps:', error);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    detect();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id, isAuthenticated]); // Only depend on user.id, not the whole user object
+
+  // Auto-sync when app is selected (only once when connection is established)
+  useEffect(() => {
+    if (
+      !healthApps.selectedApp ||
+      !isConnected ||
+      syncInProgressRef.current ||
+      !isAuthenticated
+    ) {
+      return;
+    }
+
+    // Only sync once when app is selected, not on every dependency change
+    let intervalId: NodeJS.Timeout | null = null;
+    let isMounted = true;
+
+    const performInitialSync = async () => {
+      if (!isMounted) return;
+
+      const currentSelectedApp = healthApps.selectedApp;
+      if (!currentSelectedApp) return;
+
+      // Prevent concurrent syncs
+      if (syncInProgressRef.current) {
+        console.log('Sync already in progress, skipping...');
+        return;
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      // Prevent multiple syncs for the same day
+      if (lastSyncDateRef.current === today) {
+        console.log('Already synced today, skipping...');
+        return;
+      }
+
+      syncInProgressRef.current = true;
+      try {
+        // Get today's activity data from health app
+        const activityData = await healthApps.getTodayActivityData();
+
+        if (isMounted && activityData) {
+          setTodayActivity(activityData);
+
+          // Sync to backend
+          await apiClient.post('/activity/sync', {
+            source: activityData.source,
+            caloriesBurned: activityData.caloriesBurned,
+            steps: activityData.steps,
+            distance: activityData.distance,
+            duration: activityData.duration,
+            date: activityData.date,
+            activityType: activityData.activityType,
+          });
+
+          lastSyncDateRef.current = today;
+        }
+      } catch (error) {
+        console.error('Initial sync failed:', error);
+      } finally {
+        syncInProgressRef.current = false;
+      }
+
+      if (isMounted) {
+        // Set up periodic sync every 30 minutes
+        intervalId = setInterval(
+          async () => {
+            if (
+              !syncInProgressRef.current &&
+              isMounted &&
+              healthApps.selectedApp
+            ) {
+              const todayCheck = new Date().toISOString().split('T')[0];
+              if (lastSyncDateRef.current !== todayCheck) {
+                syncInProgressRef.current = true;
+                try {
+                  const activityData = await healthApps.getTodayActivityData();
+                  if (isMounted && activityData) {
+                    setTodayActivity(activityData);
+                    await apiClient.post('/activity/sync', {
+                      source: activityData.source,
+                      caloriesBurned: activityData.caloriesBurned,
+                      steps: activityData.steps,
+                      distance: activityData.distance,
+                      duration: activityData.duration,
+                      date: activityData.date,
+                      activityType: activityData.activityType,
+                    });
+                    lastSyncDateRef.current = todayCheck;
+                  }
+                } catch (error) {
+                  console.error('Periodic sync failed:', error);
+                } finally {
+                  syncInProgressRef.current = false;
+                }
+              }
+            }
+          },
+          30 * 60 * 1000
+        );
+      }
+    };
+
+    performInitialSync();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [
+    healthApps.selectedApp,
+    isConnected,
+    isAuthenticated,
+    healthApps.getTodayActivityData,
+  ]);
 
   const value: ActivityContextType = {
-    availableApps,
-    selectedApp,
+    availableApps: healthApps.availableApps,
+    selectedApp: healthApps.selectedApp,
     isConnected,
     isLoading,
     todayActivity,

@@ -43,13 +43,23 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppNavigation = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuthStatus();
-  const { selectedApp, isConnected } = useActivity();
+  const { selectedApp, isConnected, isLoading: activityLoading } = useActivity();
 
+  // Show loading while auth is checking
   if (authLoading) {
     return <LoadingScreen />;
   }
 
-  const needsHealthAppSetup = isAuthenticated && !selectedApp && !isConnected;
+  // Show loading while activity context is initializing (only for authenticated users)
+  if (isAuthenticated && activityLoading) {
+    return <LoadingScreen />;
+  }
+
+  // Wait for activity context to load before deciding navigation
+  // Only require health app setup if user is authenticated and we've checked for saved preferences
+  const needsHealthAppSetup = isAuthenticated && 
+                              !selectedApp && 
+                              !isConnected;
 
   return (
     <NavigationContainer>

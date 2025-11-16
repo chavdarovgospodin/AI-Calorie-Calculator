@@ -8,17 +8,21 @@ export const login = async (
   email: string,
   password: string
 ): Promise<AuthResponse> => {
-  const response: AuthResponse = await apiClient.post('/auth/login', {
+  const response = await apiClient.post('/auth/login', {
     email: email,
     password: password,
   });
 
-  Promise.all([
-    AsyncStorage.setItem('access_token', response.access_token),
-    AsyncStorage.setItem('user', JSON.stringify(response.user)),
-  ]);
+  try {
+    await Promise.all([
+      AsyncStorage.setItem('access_token', response.data.access_token),
+      AsyncStorage.setItem('user', JSON.stringify(response.data.user)),
+    ]);
+  } catch (error) {
+    throw error;
+  }
 
-  return response;
+  return response.data;
 };
 
 export const register = async (
@@ -35,17 +39,18 @@ export const register = async (
     activity_level: ActivityLevel.MODERATELY_ACTIVE,
   };
 
-  const response: AuthResponse = await apiClient.post(
-    '/auth/register',
-    requestData
-  );
+  const response = await apiClient.post('/auth/register', requestData);
 
-  Promise.all([
-    AsyncStorage.setItem('access_token', response.access_token),
-    AsyncStorage.setItem('user', JSON.stringify(response.user)),
-  ]);
+  try {
+    await Promise.all([
+      AsyncStorage.setItem('access_token', response.data.access_token),
+      AsyncStorage.setItem('user', JSON.stringify(response.data.user)),
+    ]);
+  } catch (error) {
+    throw error;
+  }
 
-  return response;
+  return response.data;
 };
 
 export const logout = async (): Promise<void> => {

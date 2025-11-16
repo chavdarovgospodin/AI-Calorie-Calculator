@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -20,24 +20,24 @@ export interface DailyDashboard {
   remainingCalories: number;
 }
 
-const HomeScreen: React.FC = () => {
+const HomeScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
   const [dashboard, setDashboard] = useState<DailyDashboard | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
     try {
       const data: DailyDashboard = await getDailyLogs();
       setDashboard(data);
     } catch (error) {
-      console.error('Failed to load dashboard:', error);
+      console.error('❌ Failed to load dashboard:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);

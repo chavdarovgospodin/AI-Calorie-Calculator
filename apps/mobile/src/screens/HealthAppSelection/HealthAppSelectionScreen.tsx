@@ -14,7 +14,7 @@ import Toast from 'react-native-toast-message';
 import { useActivity } from '@/contexts/ActivityContext';
 
 import { styles } from './styles';
-import { HealthApp, HealthAppType } from '@/services/healthService/interfaces';
+import { HealthApp, HealthAppType } from '@/hooks/interfaces';
 
 const HealthAppSelectionScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -39,9 +39,9 @@ const HealthAppSelectionScreen: React.FC = () => {
       return;
     }
 
-    setSelectedAppType(app.type);
+    setSelectedAppType(app.source);
 
-    const connected = await selectHealthApp(app.type);
+    const connected = await selectHealthApp(app.source);
 
     if (connected) {
       Toast.show({
@@ -127,12 +127,12 @@ const HealthAppSelectionScreen: React.FC = () => {
   };
 
   const renderHealthApp = (app: HealthApp) => {
-    const isSelected = selectedAppType === app.type;
-    const isDisabled = !app.isAvailable && app.type !== HealthAppType.MANUAL;
+    const isSelected = selectedAppType === app.source;
+    const isDisabled = !app.isAvailable && app.source !== HealthAppType.MANUAL;
 
     return (
       <TouchableOpacity
-        key={app.type}
+        key={app.source}
         style={[
           styles.appCard,
           isSelected && styles.selectedCard,
@@ -144,9 +144,9 @@ const HealthAppSelectionScreen: React.FC = () => {
       >
         <View style={styles.appIconContainer}>
           <Ionicons
-            name={getAppIcon(app.type)}
+            name={getAppIcon(app.source)}
             size={32}
-            color={isDisabled ? '#999' : getIconColor(app.type)}
+            color={isDisabled ? '#999' : getIconColor(app.source)}
           />
         </View>
 
@@ -159,7 +159,7 @@ const HealthAppSelectionScreen: React.FC = () => {
           >
             {app.description}
           </Text>
-          {!app.isAvailable && app.type !== HealthAppType.MANUAL && (
+          {!app.isAvailable && app.source !== HealthAppType.MANUAL && (
             <Text style={styles.notAvailableText}>Not installed</Text>
           )}
         </View>

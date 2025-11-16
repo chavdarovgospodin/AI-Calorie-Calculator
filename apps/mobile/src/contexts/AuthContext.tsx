@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {
   AuthAction,
@@ -14,7 +15,6 @@ import {
   register as authRegister,
 } from '@/services/auth';
 import { RegisterData } from '@/services/interfaces';
-import { useNavigation } from '@react-navigation/native';
 
 const initialState: AuthState = {
   user: null,
@@ -102,6 +102,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       dispatch({ type: 'AUTH_START' });
 
       const response = await authLogin(email, password);
+
       dispatch({ type: 'AUTH_SUCCESS', payload: response.user });
     } catch (error) {
       console.error('❌ Login failed:', error);

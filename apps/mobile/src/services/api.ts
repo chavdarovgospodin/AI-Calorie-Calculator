@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const createApiClient = (): AxiosInstance => {
   const baseURL = __DEV__
-    ? 'http://localhost:3000/api'
+    ? 'http://192.168.1.7:3000/api' // <-- Твоето IP от Expo
     : 'https://your-production-api.com';
 
   const client = axios.create({

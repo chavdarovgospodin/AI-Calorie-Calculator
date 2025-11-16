@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useActivity } from '@/contexts/ActivityContext';
 import { styles } from './styles';
-import { HealthAppType } from '@/services/healthService/interfaces';
+import { HealthAppType } from '@/hooks/interfaces';
 
 interface ActivitySummaryProps {
   date?: string;
