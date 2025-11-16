@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,12 +13,31 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { styles } from './styles';
 import { getDailyLogs } from '@/services/health';
+import { LoadingScreen, RecentFood } from '@/components';
+
+export interface FoodEntry {
+  id: string;
+  food_name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  quantity: number;
+  unit: string;
+  created_at: string;
+}
 
 export interface DailyDashboard {
   totalCaloriesConsumed: number;
   targetCalories: number;
   caloriesBurned: number;
   remainingCalories: number;
+  foodEntries: FoodEntry[];
+  macros: {
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
 }
 
 const HomeScreen = () => {
@@ -25,6 +45,7 @@ const HomeScreen = () => {
   const { user } = useAuth();
   const [dashboard, setDashboard] = useState<DailyDashboard | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -67,6 +88,28 @@ const HomeScreen = () => {
     return dashboard.totalCaloriesConsumed - dashboard.caloriesBurned;
   };
 
+  const handleDeleteFood = useCallback((foodId: string) => {
+    Alert.alert(
+      'Delete Food',
+      'Are you sure you want to remove this food entry?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            // TODO: Implement delete functionality
+            console.log('Delete food:', foodId);
+          },
+        },
+      ]
+    );
+  }, []);
+
+  if (isLoading || refreshing) {
+    return <LoadingScreen />;
+  }
+
   return (
     <ScrollView
       style={styles.container}
@@ -77,13 +120,13 @@ const HomeScreen = () => {
     >
       <View style={styles.header}>
         <Text style={styles.greeting}>
-          Здравей, {user?.email?.split('@')[0] || 'there'}! 👋
+          Hello, {user?.email?.split('@')[0] || 'there'}! 👋
         </Text>
       </View>
 
       {/* Main Calorie Display */}
       <View style={styles.calorieCard}>
-        <Text style={styles.calorieTitle}>Дневни калории</Text>
+        <Text style={styles.calorieTitle}>Daily Calories</Text>
         <View style={styles.calorieMain}>
           <Text style={[styles.calorieValue, { color: getCalorieColor() }]}>
             {dashboard?.totalCaloriesConsumed || 0}
@@ -111,26 +154,44 @@ const HomeScreen = () => {
           />
         </View>
         <Text style={styles.remainingText}>
-          {dashboard?.remainingCalories || 0} калории остават
+          {dashboard?.remainingCalories || 0} calories remaining
         </Text>
       </View>
+
+      {/* Macros Summary */}
+      {dashboard?.macros && (
+        <View style={styles.macrosCard}>
+          <Text style={styles.macrosTitle}>Macros</Text>
+          <View style={styles.macrosRow}>
+            <View style={styles.macroItem}>
+              <Text style={styles.macroValue}>{dashboard.macros.protein}g</Text>
+              <Text style={styles.macroLabel}>Protein</Text>
+            </View>
+            <View style={styles.macroItem}>
+              <Text style={styles.macroValue}>{dashboard.macros.carbs}g</Text>
+              <Text style={styles.macroLabel}>Carbs</Text>
+            </View>
+            <View style={styles.macroItem}>
+              <Text style={styles.macroValue}>{dashboard.macros.fat}g</Text>
+              <Text style={styles.macroLabel}>Fat</Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {dashboard && (
+        <RecentFood dashboard={dashboard} handleDeleteFood={handleDeleteFood} />
+      )}
 
       {/* Prominent Add Food Button */}
       <TouchableOpacity style={styles.addFoodButton} onPress={handleFoodInput}>
         <View style={styles.addFoodButtonContent}>
           <Ionicons name="add-circle" size={32} color="#fff" />
           <View style={styles.addFoodTextContainer}>
-            <Text style={styles.addFoodTitle}>Добави храна</Text>
-            <Text style={styles.addFoodSubtitle}>Снимай или опиши</Text>
+            <Text style={styles.addFoodTitle}>Add Food</Text>
+            <Text style={styles.addFoodSubtitle}>Photo or description</Text>
           </View>
         </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.addFoodButton}
-        onPress={() => navigation.navigate('HealthAppSelection')}
-      >
-        <Text>Health Apps</Text>
       </TouchableOpacity>
 
       {/* Activity Summary Button */}
@@ -139,27 +200,24 @@ const HomeScreen = () => {
         onPress={handleActivitySummary}
       >
         <Ionicons name="fitness-outline" size={24} color="#007AFF" />
-        <Text style={styles.activityButtonText}>Виж активност</Text>
-        <Ionicons name="chevron-forward" size={20} color="#007AFF" />
+        <Text style={styles.activityButtonText}>View Activity</Text>
       </TouchableOpacity>
 
       {/* Quick Actions */}
       <View style={styles.quickActions}>
-        <Text style={styles.sectionTitle}>Бързи действия</Text>
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.actionButton}>
+        <Text style={styles.quickActionsTitle}>Quick Actions</Text>
+        <View style={styles.quickActionsRow}>
+          <TouchableOpacity style={styles.quickActionItem}>
             <Ionicons name="water-outline" size={24} color="#007AFF" />
-            <Text style={styles.actionButtonText}>Вода</Text>
+            <Text style={styles.quickActionText}>Water</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.quickActionItem}>
             <Ionicons name="calendar-outline" size={24} color="#007AFF" />
-            <Text style={styles.actionButtonText}>История</Text>
+            <Text style={styles.quickActionText}>History</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionButton}>
-            <Ionicons name="stats-chart-outline" size={24} color="#007AFF" />
-            <Text style={styles.actionButtonText}>Прогрес</Text>
+          <TouchableOpacity style={styles.quickActionItem}>
+            <Ionicons name="trending-up-outline" size={24} color="#007AFF" />
+            <Text style={styles.quickActionText}>Progress</Text>
           </TouchableOpacity>
         </View>
       </View>

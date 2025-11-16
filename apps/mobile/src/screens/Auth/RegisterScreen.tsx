@@ -18,18 +18,7 @@ import { RegisterData } from '@/services/interfaces';
 import { ActivityLevel, Gender, Goal } from '@/services/enums';
 
 import { registerStyles as styles } from './styles';
-
-interface RegisterFormData {
-  email: string;
-  password: string;
-  confirmPassword: string;
-  age: string;
-  gender: Gender;
-  height: string;
-  weight: string;
-  activity_level: ActivityLevel;
-  goal: Goal;
-}
+import { RegisterFormData } from './interfaces';
 
 const RegisterScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -112,11 +101,10 @@ const RegisterScreen: React.FC = () => {
 
       await register(registerData);
 
-      Alert.alert(
-        'Success!',
-        'Account created successfully. Welcome to your fitness journey!',
-        [{ text: 'OK', onPress: () => navigation.navigate('Dashboard') }]
-      );
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'HealthAppSelection' }],
+      });
     } catch (error) {
       console.error('Registration error:', error);
       Alert.alert(

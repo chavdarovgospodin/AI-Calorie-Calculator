@@ -58,14 +58,12 @@ export class FoodController {
     if (!file) {
       throw new BadRequestException('No image file provided');
     }
-    // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.mimetype)) {
       throw new BadRequestException(
         'Invalid file type. Please upload JPEG, PNG or WebP image'
       );
     }
-    // Validate file size (max 10MB)
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       throw new BadRequestException('File too large. Maximum size is 10MB');
@@ -112,7 +110,7 @@ export class FoodController {
     this.logger.log(
       `Getting food stats for user: ${req.user.email}, days: ${days}`
     );
-    // Simple stats endpoint for future use
+
     return {
       message: 'Food stats endpoint - coming soon',
       user: req.user.email,

@@ -12,6 +12,7 @@ import { SupabaseService } from 'src/database/supabase.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -19,7 +20,8 @@ export class AuthService {
 
   constructor(
     private supabaseService: SupabaseService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private configService: ConfigService
   ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
@@ -85,10 +87,10 @@ export class AuthService {
       }
       // Generate JWT token
       const payload = { email: authData.user.email, sub: authData.user.id };
-      const access_token = this.jwtService.sign(payload);
+      const tokens = this.generateTokens(authData.user.id, authData.user.email);
       this.logger.log(`User registered successfully: ${registerDto.email}`);
       return {
-        access_token,
+        ...tokens,
         user: userData,
       };
     } catch (error) {
@@ -128,13 +130,12 @@ export class AuthService {
         throw new UnauthorizedException('User profile not found');
       }
 
-      const payload = { email: authData.user.email, sub: authData.user.id };
-      const access_token = this.jwtService.sign(payload);
+      const tokens = this.generateTokens(authData.user.id, authData.user.email);
 
       this.logger.log(`User logged in successfully: ${loginDto.email}`);
 
       return {
-        access_token,
+        ...tokens,
         user: userData,
       };
     } catch (error) {
@@ -147,5 +148,55 @@ export class AuthService {
         'Login failed. Please check your credentials.'
       );
     }
+  }
+
+  async refreshToken(
+    refreshToken: string
+  ): Promise<{ access_token: string; refresh_token: string }> {
+    try {
+      const payload = this.jwtService.verify(refreshToken, {
+        secret:
+          this.configService.get('JWT_REFRESH_SECRET') ||
+          this.configService.get('JWT_SECRET') + '_refresh',
+      });
+
+      if (payload.type !== 'refresh') {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      const { data: user } = await this.supabaseService.client
+        .from('users')
+        .select('id, email')
+        .eq('id', payload.sub)
+        .single();
+
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      return this.generateTokens(user.id, user.email);
+    } catch (error) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
+  private generateTokens(userId: string, email: string) {
+    const payload = { email, sub: userId };
+
+    const access_token = this.jwtService.sign(payload, {
+      expiresIn: '15m', // Short-lived access token
+    });
+
+    const refresh_token = this.jwtService.sign(
+      { sub: userId, type: 'refresh' },
+      {
+        expiresIn: '30d', // Long-lived refresh token
+        secret:
+          this.configService.get('JWT_REFRESH_SECRET') ||
+          this.configService.get('JWT_SECRET') + '_refresh',
+      }
+    );
+
+    return { access_token, refresh_token };
   }
 }

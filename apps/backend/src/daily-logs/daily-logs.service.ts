@@ -3,7 +3,13 @@ import { ActivityService } from 'src/activity/activity.service';
 
 import { SupabaseService } from '../database/supabase.service';
 
-import { CreateDailyLogDto, DashboardResponseDto } from './dto/daily-log.dto';
+import {
+  ActivityEntryDto,
+  CreateDailyLogDto,
+  DashboardResponseDto,
+  FoodEntryDto,
+  MacrosDto,
+} from './dto/daily-log.dto';
 import { WeeklyLogEntry } from './interfaces/WeeklyLogEntry';
 
 @Injectable()
@@ -25,13 +31,31 @@ export class DailyLogsService {
         .select(
           `
           *,
-          food_entries(*),
-          activity_entries(*)
+          food_entries(
+            id,
+            food_name,
+            description,
+            calories,
+            protein,
+            carbs,
+            fat,
+            quantity,
+            unit,
+            created_at
+          ),
+          activity_entries(
+            id,
+            activity_type,
+            duration,
+            calories_burned,
+            created_at
+          )
         `
         )
         .eq('user_id', userId)
         .eq('date', targetDate)
         .single();
+
       if (!dailyLog) {
         this.logger.log(
           `Creating new daily log for user ${userId} on ${targetDate}`
@@ -47,14 +71,33 @@ export class DailyLogsService {
           .select(
             `
             *,
-            food_entries(*),
-            activity_entries(*)
+            food_entries(
+              id,
+              food_name,
+              description,
+              calories,
+              protein,
+              carbs,
+              fat,
+              quantity,
+              unit,
+              created_at
+            ),
+            activity_entries(
+              id,
+              activity_type,
+              duration,
+              calories_burned,
+              created_at
+            )
           `
           )
           .single();
+
         if (error) throw error;
         dailyLog = newLog;
       }
+
       return dailyLog;
     } catch (error) {
       this.logger.error(`Failed to get daily log: ${error.message}`);
@@ -72,79 +115,124 @@ export class DailyLogsService {
     );
 
     try {
-      // Get user's daily calorie goal
       const { data: user, error: userError } = await this.supabaseService.client
         .from('users')
         .select('daily_calorie_goal, goal')
         .eq('id', userId)
         .single();
+
       if (userError || !user) {
         throw new NotFoundException('User not found');
       }
-      // Get today's log with related data
+
       const dailyLog = await this.getDailyLog(userId, targetDate);
-      // Calculate totals from actual food entries
+
       const totalCaloriesConsumed =
         dailyLog.food_entries?.reduce(
           (sum: number, entry: any) => sum + (entry.calories || 0),
           0
         ) || 0;
+
       const totalCaloriesBurned =
         dailyLog.activity_entries?.reduce(
           (sum: number, entry: any) => sum + (entry.calories_burned || 0),
           0
         ) || 0;
-      // Calculate macros
+
       const totalProtein =
         dailyLog.food_entries?.reduce(
           (sum: number, entry: any) => sum + (entry.protein || 0),
           0
         ) || 0;
+
       const totalCarbs =
         dailyLog.food_entries?.reduce(
           (sum: number, entry: any) => sum + (entry.carbs || 0),
           0
         ) || 0;
+
       const totalFat =
         dailyLog.food_entries?.reduce(
           (sum: number, entry: any) => sum + (entry.fat || 0),
           0
         ) || 0;
-      // Calculate metrics
+
       const netCalories = totalCaloriesConsumed - totalCaloriesBurned;
       const remainingCalories = user.daily_calorie_goal - netCalories;
       const progressPercentage = Math.min(
         Math.round((netCalories / user.daily_calorie_goal) * 100),
         100
       );
-      // Determine goal status
+
       let goalStatus: 'under' | 'on_target' | 'over' = 'under';
-      const tolerance = user.daily_calorie_goal * 0.05; // 5% tolerance
+      const tolerance = user.daily_calorie_goal * 0.05;
+
       if (netCalories > user.daily_calorie_goal + tolerance) {
         goalStatus = 'over';
       } else if (netCalories >= user.daily_calorie_goal - tolerance) {
         goalStatus = 'on_target';
       }
+
+      const foodEntries: FoodEntryDto[] = (dailyLog.food_entries || [])
+        .map((entry: any) => ({
+          id: entry.id,
+          food_name: entry.food_name || entry.description || 'Unknown Food',
+          calories: entry.calories || 0,
+          protein: entry.protein || 0,
+          carbs: entry.carbs || 0,
+          fat: entry.fat || 0,
+          quantity: entry.quantity || 1,
+          unit: entry.unit || 'serving',
+          created_at: entry.created_at,
+          description: entry.description,
+        }))
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+
+      const activityEntries: ActivityEntryDto[] = (
+        dailyLog.activity_entries || []
+      )
+        .map((entry: any) => ({
+          id: entry.id,
+          activity_type: entry.activity_type || 'Unknown Activity',
+          duration: entry.duration || 0,
+          calories_burned: entry.calories_burned || 0,
+          created_at: entry.created_at,
+        }))
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+
+      const macros: MacrosDto = {
+        protein: Math.round(totalProtein * 10) / 10,
+        carbs: Math.round(totalCarbs * 10) / 10,
+        fat: Math.round(totalFat * 10) / 10,
+      };
+
       this.logger.log(
         `Dashboard calculated: ${netCalories}/${user.daily_calorie_goal} calories (${progressPercentage}%)`
       );
-      return {
+
+      const dashboardResponse: DashboardResponseDto = {
         date: targetDate,
         dailyCalorieGoal: user.daily_calorie_goal,
         totalCaloriesConsumed,
         totalCaloriesBurned,
         netCalories,
         remainingCalories,
-        macros: {
-          protein: Math.round(totalProtein * 10) / 10,
-          carbs: Math.round(totalCarbs * 10) / 10,
-          fat: Math.round(totalFat * 10) / 10,
-        },
+        macros,
         progressPercentage,
         goalStatus,
-        foodEntries: dailyLog.food_entries || [],
-        activityEntries: dailyLog.activity_entries || [],
+        foodEntries,
+        activityEntries,
+        targetCalories: user.daily_calorie_goal,
+        caloriesBurned: totalCaloriesBurned,
       };
+
+      return dashboardResponse;
     } catch (error) {
       this.logger.error(`Failed to get dashboard data: ${error.message}`);
       throw error;
