@@ -42,10 +42,9 @@ export interface DailyDashboard {
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [dashboard, setDashboard] = useState<DailyDashboard | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -106,7 +105,7 @@ const HomeScreen = () => {
     );
   }, []);
 
-  if (isLoading || refreshing) {
+  if (refreshing || isLoading) {
     return <LoadingScreen />;
   }
 

@@ -72,21 +72,7 @@ const UserSettingsScreen: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-          },
-        },
-      ],
-      { cancelable: true }
-    );
+    await logout();
   };
 
   const getGoalText = (goal: string) => {

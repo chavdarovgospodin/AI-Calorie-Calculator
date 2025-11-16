@@ -151,7 +151,7 @@ export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({
     if (isAuthenticated) {
       loadSavedSettings();
     }
-  }, [isAuthenticated, healthApps]);
+  }, [isAuthenticated]); // Removed healthApps - use healthApps.setSelectedApp directly
 
   // ============================================================================
   // AUTO SYNC
