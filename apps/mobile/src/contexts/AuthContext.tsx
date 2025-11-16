@@ -5,7 +5,6 @@ import React, {
   useEffect,
   useRef,
 } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {
   AuthAction,
@@ -23,6 +22,7 @@ import {
   refreshTokens,
 } from '@/services/auth';
 import { RegisterData } from '@/services/interfaces';
+import { AppState, AppStateStatus } from 'react-native';
 
 const initialState: AuthState = {
   user: null,

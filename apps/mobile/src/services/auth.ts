@@ -25,14 +25,14 @@ export const login = async (
 
   try {
     await Promise.all([
-      AsyncStorage.setItem('access_token', response.data.access_token),
-      AsyncStorage.setItem('user', JSON.stringify(response.data.user)),
+      AsyncStorage.setItem('access_token', response.access_token),
+      AsyncStorage.setItem('user', JSON.stringify(response.user)),
     ]);
   } catch (error) {
     throw error;
   }
 
-  return response.data;
+  return response;
 };
 
 export const register = async (
@@ -53,14 +53,14 @@ export const register = async (
 
   try {
     await Promise.all([
-      AsyncStorage.setItem('access_token', response.data.access_token),
-      AsyncStorage.setItem('user', JSON.stringify(response.data.user)),
+      AsyncStorage.setItem('access_token', response.access_token),
+      AsyncStorage.setItem('user', JSON.stringify(response.user)),
     ]);
   } catch (error) {
     throw error;
   }
 
-  return response.data;
+  return response;
 };
 
 export const refreshTokens = async (): Promise<boolean> => {
@@ -71,13 +71,10 @@ export const refreshTokens = async (): Promise<boolean> => {
     const response = await apiClient.post('/auth/refresh', {
       refresh_token: refreshToken,
     });
-
+    console.log(response);
     await Promise.all([
-      AsyncStorage.setItem(TOKEN_KEYS.ACCESS_TOKEN, response.data.access_token),
-      AsyncStorage.setItem(
-        TOKEN_KEYS.REFRESH_TOKEN,
-        response.data.refresh_token
-      ),
+      AsyncStorage.setItem(TOKEN_KEYS.ACCESS_TOKEN, response.access_token),
+      AsyncStorage.setItem(TOKEN_KEYS.REFRESH_TOKEN, response.refresh_token),
       AsyncStorage.setItem(TOKEN_KEYS.TOKEN_EXPIRY, calculateTokenExpiry()),
     ]);
 

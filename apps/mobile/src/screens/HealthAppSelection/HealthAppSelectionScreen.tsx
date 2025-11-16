@@ -13,28 +13,33 @@ import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Import context
 import { useActivity } from '@/contexts/ActivityContext';
 
+// Import types
+import type { HealthAppType, HealthApp } from '@/services/deviceHealth';
+
 import { styles } from './styles';
-import { HealthApp, HealthAppType } from '@/hooks/interfaces';
 
 const HealthAppSelectionScreen: React.FC = () => {
   const navigation = useNavigation();
   const { availableApps, detectHealthApps, selectHealthApp, isLoading } =
     useActivity();
 
-  const [selectedAppSource, setSelectedAppSource] =
-    useState<ActivitySourceType | null>(null);
+  const [selectedAppType, setSelectedAppType] = useState<HealthAppType | null>(
+    null
+  );
 
   useEffect(() => {
     detectHealthApps();
   }, [detectHealthApps]);
 
-  const handleAppSelect = async (app: any) => {
-    if (!app.isInstalled && app.source !== 'manual') {
+  const handleAppSelect = async (app: HealthApp) => {
+    // Check if app is available
+    if (!app.isAvailable && app.source !== 'manual') {
       Alert.alert(
         'App Not Available',
-        `${app.name} is not installed on your device. Please install it first or choose another option.`,
+        `${app.name} is not available on your device. Please install it first or choose another option.`,
         [{ text: 'OK' }]
       );
       return;
@@ -42,7 +47,8 @@ const HealthAppSelectionScreen: React.FC = () => {
 
     setSelectedAppType(app.source);
 
-    const connected = await selectHealthApp(app.source);
+    try {
+      await selectHealthApp(app.source);
 
       Toast.show({
         type: 'success',
@@ -50,17 +56,21 @@ const HealthAppSelectionScreen: React.FC = () => {
         text2: `Successfully connected to ${app.name}`,
       });
 
+      // Navigate to Home
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Home' }],
+        routes: [{ name: 'Home' as never }],
       });
     } catch (error) {
+      console.error('Failed to select health app:', error);
+
       Toast.show({
         type: 'error',
         text1: 'Connection Failed',
         text2: `Failed to connect to ${app.name}. Please check permissions.`,
       });
-      setSelectedAppSource(null);
+
+      setSelectedAppType(null);
     }
   };
 
@@ -72,7 +82,7 @@ const HealthAppSelectionScreen: React.FC = () => {
     if (Platform.OS === 'web') {
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Home' }],
+        routes: [{ name: 'Home' as never }],
       });
       return;
     }
@@ -90,7 +100,7 @@ const HealthAppSelectionScreen: React.FC = () => {
           onPress: () => {
             navigation.reset({
               index: 0,
-              routes: [{ name: 'Home' }],
+              routes: [{ name: 'Home' as never }],
             });
           },
         },
@@ -98,11 +108,13 @@ const HealthAppSelectionScreen: React.FC = () => {
     );
   };
 
-  const getAppIcon = (appSource: string): keyof typeof Ionicons.glyphMap => {
+  const getAppIcon = (
+    appSource: HealthAppType
+  ): keyof typeof Ionicons.glyphMap => {
     switch (appSource) {
-      case 'apple_health':
+      case 'healthkit':
         return 'heart-outline';
-      case 'google_fit':
+      case 'googlefit':
         return 'fitness-outline';
       case 'samsung_health':
         return 'barbell-outline';
@@ -117,11 +129,11 @@ const HealthAppSelectionScreen: React.FC = () => {
     }
   };
 
-  const getIconColor = (appSource: string) => {
+  const getIconColor = (appSource: HealthAppType): string => {
     switch (appSource) {
-      case 'apple_health':
+      case 'healthkit':
         return '#FF3B30';
-      case 'google_fit':
+      case 'googlefit':
         return '#4285F4';
       case 'samsung_health':
         return '#1428A0';
@@ -136,9 +148,28 @@ const HealthAppSelectionScreen: React.FC = () => {
     }
   };
 
+  const getAppDescription = (source: HealthAppType): string => {
+    switch (source) {
+      case 'healthkit':
+        return 'Integrates with all iOS health apps';
+      case 'googlefit':
+        return 'Integrates with most Android fitness apps';
+      case 'samsung_health':
+        return 'Direct Samsung Health integration';
+      case 'huawei_health':
+        return 'Direct Huawei Health integration';
+      case 'device_sensors':
+        return 'Use built-in phone sensors';
+      case 'manual':
+        return 'Manually log your activities';
+      default:
+        return '';
+    }
+  };
+
   const renderHealthApp = (app: HealthApp) => {
     const isSelected = selectedAppType === app.source;
-    const isDisabled = !app.isAvailable && app.source !== HealthAppType.MANUAL;
+    const isDisabled = !app.isAvailable && app.source !== 'manual';
 
     return (
       <TouchableOpacity
@@ -149,7 +180,7 @@ const HealthAppSelectionScreen: React.FC = () => {
           isDisabled && styles.disabledCard,
         ]}
         onPress={() => handleAppSelect(app)}
-        disabled={isLoading}
+        disabled={isLoading || isDisabled}
         activeOpacity={0.8}
       >
         <View style={styles.appIconContainer}>
@@ -169,8 +200,8 @@ const HealthAppSelectionScreen: React.FC = () => {
           >
             {getAppDescription(app.source)}
           </Text>
-          {!app.isAvailable && app.source !== HealthAppType.MANUAL && (
-            <Text style={styles.notAvailableText}>Not installed</Text>
+          {!app.isAvailable && app.source !== 'manual' && (
+            <Text style={styles.notAvailableText}>Not available</Text>
           )}
         </View>
 
@@ -182,35 +213,6 @@ const HealthAppSelectionScreen: React.FC = () => {
       </TouchableOpacity>
     );
   };
-
-  const getAppDescription = (source: string): string => {
-    switch (source) {
-      case 'apple_health':
-        return 'Integrates with all iOS health apps';
-      case 'google_fit':
-        return 'Integrates with most Android fitness apps';
-      case 'samsung_health':
-        return 'Direct Samsung Health integration';
-      case 'huawei_health':
-        return 'Direct Huawei Health integration';
-      case 'device_sensors':
-        return 'Use built-in phone sensors';
-      case 'manual':
-        return 'Manually log your activities';
-      default:
-        return '';
-    }
-  };
-
-  // Add manual entry option if not already in the list
-  const appsToDisplay = [...availableApps];
-  if (!appsToDisplay.find(app => app.source === 'manual')) {
-    appsToDisplay.push({
-      name: 'Manual Entry',
-      source: 'manual',
-      isInstalled: true,
-    });
-  }
 
   return (
     <View style={styles.container}>
@@ -235,7 +237,7 @@ const HealthAppSelectionScreen: React.FC = () => {
           ) : (
             <>
               <Text style={styles.sectionTitle}>Available Options</Text>
-              {appsToDisplay.map(renderHealthApp)}
+              {availableApps.map(renderHealthApp)}
             </>
           )}
         </View>

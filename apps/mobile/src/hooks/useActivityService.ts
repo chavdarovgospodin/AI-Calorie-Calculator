@@ -1,17 +1,20 @@
 import { useState, useCallback } from 'react';
-import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Device from 'expo-device';
-import { apiClient } from '@/services/api';
-import {
-  ActivityData,
-  ActivitySource,
-  ActivitySummary,
+
+// Import services
+import * as activityApi from '@/services/activity';
+import * as deviceHealth from '@/services/deviceHealth';
+
+// Import types from services (temporary until we move to types/health.ts)
+import type { ActivitySource, ActivitySummary } from '@/services/activity';
+import type {
   HealthApp,
-} from './interfaces';
+  HealthAppType,
+  ActivityData,
+} from '@/services/deviceHealth';
 
 export const useActivityService = () => {
-  const [connectedApps, setConnectedApps] = useState<Set<ActivitySource>>(
+  const [connectedApps, setConnectedApps] = useState<Set<HealthAppType>>(
     new Set()
   );
 
@@ -33,343 +36,150 @@ export const useActivityService = () => {
   }, []);
 
   // ============================================================================
-  // DETECTION & CONNECTION
+  // DETECTION & CONNECTION (uses deviceHealth service)
   // ============================================================================
-
-  const checkAppInstalled = useCallback(
-    async (packageName: string): Promise<boolean> => {
-      try {
-        // За демо целите, симулираме проверка
-        // В реален проект би използвал react-native-installed-apps
-        // или подобна библиотека
-        return Math.random() > 0.5; // 50% шанс за да има разнообразие
-      } catch (error) {
-        console.error(`Failed to check if ${packageName} is installed:`, error);
-        return false;
-      }
-    },
-    []
-  );
 
   const detectAvailableApps = useCallback(async (): Promise<HealthApp[]> => {
-    const apps: HealthApp[] = [];
-
-    if (Platform.OS === 'android') {
-      // Google Fit
-      apps.push({
-        source: ActivitySource.GOOGLE_FIT,
-        name: 'Google Fit',
-        description: 'Tracks steps, workouts, and health metrics',
-        isInstalled: await checkAppInstalled('com.google.android.apps.fitness'),
-        isConnected: connectedApps.has(ActivitySource.GOOGLE_FIT),
-        packageName: 'com.google.android.apps.fitness',
-        icon: '🏃‍♂️',
-      });
-
-      // Samsung Health
-      if (Device.brand === 'samsung') {
-        apps.push({
-          source: ActivitySource.SAMSUNG_HEALTH,
-          name: 'Samsung Health',
-          description: 'Comprehensive health and fitness tracking',
-          isInstalled: await checkAppInstalled('com.sec.android.app.shealth'),
-          isConnected: connectedApps.has(ActivitySource.SAMSUNG_HEALTH),
-          packageName: 'com.sec.android.app.shealth',
-          icon: '💚',
-        });
-      }
-
-      // Huawei Health (популярен в България)
-      if (Device.brand === 'Huawei' || Device.brand === 'HUAWEI') {
-        apps.push({
-          source: ActivitySource.HUAWEI_HEALTH,
-          name: 'Huawei Health',
-          description: 'Professional health management',
-          isInstalled: await checkAppInstalled('com.huawei.health'),
-          isConnected: connectedApps.has(ActivitySource.HUAWEI_HEALTH),
-          packageName: 'com.huawei.health',
-          icon: '❤️',
-        });
-      }
-    } else if (Platform.OS === 'ios') {
-      // Apple Health (APPLE_HEALTH)
-      apps.push({
-        source: ActivitySource.APPLE_HEALTH,
-        name: 'Apple Health',
-        description: 'Central health and fitness hub for iOS',
-        isInstalled: true, // Always available on iOS
-        isConnected: connectedApps.has(ActivitySource.APPLE_HEALTH),
-        icon: '🍎',
-      });
-    }
-
-    // Device sensors (всички устройства)
-    apps.push({
-      source: ActivitySource.DEVICE_SENSORS,
-      name: 'Device Sensors',
-      description: 'Built-in step counter and motion sensors',
-      isInstalled: true,
-      isConnected: connectedApps.has(ActivitySource.DEVICE_SENSORS),
-      icon: '📱',
-    });
-
-    // Manual entry (винаги налично)
-    apps.push({
-      source: ActivitySource.MANUAL,
-      name: 'Manual Entry',
-      description: 'Manually log your activities and workouts',
-      isInstalled: true,
-      isConnected: connectedApps.has(ActivitySource.MANUAL),
-      icon: '✍️',
-    });
-
-    console.log('📱 Detected health apps:', apps.length);
-    return apps;
-  }, [connectedApps, checkAppInstalled]);
-
-  // ============================================================================
-  // STORAGE HELPERS
-  // ============================================================================
-
-  const saveConnectedApps = useCallback(async (apps: Set<ActivitySource>) => {
     try {
-      const appsArray = Array.from(apps);
-      await AsyncStorage.setItem(
-        'connected_health_apps',
-        JSON.stringify(appsArray)
-      );
-      setConnectedApps(apps);
+      const apps = await deviceHealth.detectAvailableHealthApps();
+
+      // Update connection status based on stored connected apps
+      const appsWithConnectionStatus = apps.map(app => ({
+        ...app,
+        isConnected: connectedApps.has(app.source),
+      }));
+
+      return appsWithConnectionStatus;
     } catch (error) {
-      console.error('Failed to save connected apps:', error);
+      console.error('Failed to detect apps:', error);
+      return [];
     }
-  }, []);
-
-  // ============================================================================
-  // CONNECTION METHODS
-  // ============================================================================
-
-  const connectGoogleFit = useCallback(async (): Promise<boolean> => {
-    // TODO: Implement Google Fit API integration
-    console.log('🟢 Google Fit connection simulated');
-    const newConnectedApps = new Set(connectedApps);
-    newConnectedApps.add(ActivitySource.GOOGLE_FIT);
-    await saveConnectedApps(newConnectedApps);
-    return true;
-  }, [connectedApps, saveConnectedApps]);
-
-  const connectSamsungHealth = useCallback(async (): Promise<boolean> => {
-    // TODO: Implement Samsung Health SDK integration
-    console.log('💚 Samsung Health connection simulated');
-    const newConnectedApps = new Set(connectedApps);
-    newConnectedApps.add(ActivitySource.SAMSUNG_HEALTH);
-    await saveConnectedApps(newConnectedApps);
-    return true;
-  }, [connectedApps, saveConnectedApps]);
-
-  const connectHuaweiHealth = useCallback(async (): Promise<boolean> => {
-    // TODO: Implement Huawei Health SDK integration
-    console.log('❤️ Huawei Health connection simulated');
-    const newConnectedApps = new Set(connectedApps);
-    newConnectedApps.add(ActivitySource.HUAWEI_HEALTH);
-    await saveConnectedApps(newConnectedApps);
-    return true;
-  }, [connectedApps, saveConnectedApps]);
-
-  const connectHealthKit = useCallback(async (): Promise<boolean> => {
-    // TODO: Implement HealthKit integration
-    console.log('🍎 HealthKit connection simulated');
-    const newConnectedApps = new Set(connectedApps);
-    newConnectedApps.add(ActivitySource.APPLE_HEALTH);
-    await saveConnectedApps(newConnectedApps);
-    return true;
-  }, [connectedApps, saveConnectedApps]);
-
-  const connectDeviceSensors = useCallback(async (): Promise<boolean> => {
-    // TODO: Implement device sensors (pedometer, motion)
-    console.log('📱 Device sensors enabled');
-    const newConnectedApps = new Set(connectedApps);
-    newConnectedApps.add(ActivitySource.DEVICE_SENSORS);
-    await saveConnectedApps(newConnectedApps);
-    return true;
-  }, [connectedApps, saveConnectedApps]);
-
-  const enableManualEntry = useCallback(async (): Promise<boolean> => {
-    console.log('✍️ Manual entry enabled');
-    const newConnectedApps = new Set(connectedApps);
-    newConnectedApps.add(ActivitySource.MANUAL);
-    await saveConnectedApps(newConnectedApps);
-    return true;
-  }, [connectedApps, saveConnectedApps]);
+  }, [connectedApps]);
 
   const connectToApp = useCallback(
-    async (source: ActivitySource): Promise<boolean> => {
+    async (appType: HealthAppType): Promise<boolean> => {
       try {
-        console.log(`🔗 Connecting to ${source}...`);
+        const success = await deviceHealth.connectToHealthApp(appType);
 
-        // Симулираме connection процеса
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (success) {
+          const newConnectedApps = new Set(connectedApps);
+          newConnectedApps.add(appType);
+          setConnectedApps(newConnectedApps);
 
-        switch (source) {
-          case ActivitySource.GOOGLE_FIT:
-            return await connectGoogleFit();
-          case ActivitySource.SAMSUNG_HEALTH:
-            return await connectSamsungHealth();
-          case ActivitySource.HUAWEI_HEALTH:
-            return await connectHuaweiHealth();
-          case ActivitySource.APPLE_HEALTH:
-            return await connectHealthKit();
-          case ActivitySource.DEVICE_SENSORS:
-            return await connectDeviceSensors();
-          case ActivitySource.MANUAL:
-            return await enableManualEntry();
-          default:
-            throw new Error(`Unsupported source: ${source}`);
+          // Save to storage
+          const appsArray = Array.from(newConnectedApps);
+          await AsyncStorage.setItem(
+            'connected_health_apps',
+            JSON.stringify(appsArray)
+          );
         }
+
+        return success;
       } catch (error) {
-        console.error(`❌ Failed to connect to ${source}:`, error);
+        console.error(`Failed to connect to ${appType}:`, error);
         return false;
       }
     },
-    [
-      connectGoogleFit,
-      connectSamsungHealth,
-      connectHuaweiHealth,
-      connectHealthKit,
-      connectDeviceSensors,
-      enableManualEntry,
-    ]
+    [connectedApps]
   );
 
   const disconnectFromApp = useCallback(
-    async (source: ActivitySource): Promise<boolean> => {
+    async (appType: HealthAppType): Promise<boolean> => {
       try {
-        console.log(`🔌 Disconnecting from ${source}...`);
-
         const newConnectedApps = new Set(connectedApps);
-        newConnectedApps.delete(source);
-        await saveConnectedApps(newConnectedApps);
+        newConnectedApps.delete(appType);
+        setConnectedApps(newConnectedApps);
 
-        console.log(`✅ Disconnected from ${source}`);
+        // Save to storage
+        const appsArray = Array.from(newConnectedApps);
+        await AsyncStorage.setItem(
+          'connected_health_apps',
+          JSON.stringify(appsArray)
+        );
+
+        console.log(`✅ Disconnected from ${appType}`);
         return true;
       } catch (error) {
-        console.error(`❌ Failed to disconnect from ${source}:`, error);
+        console.error(`Failed to disconnect from ${appType}:`, error);
         return false;
       }
     },
-    [connectedApps, saveConnectedApps]
+    [connectedApps]
   );
 
   // ============================================================================
-  // DATA FETCHING
+  // DATA RETRIEVAL (uses deviceHealth service)
   // ============================================================================
 
-  const fetchActivityFromSource = useCallback(
-    async (
-      source: ActivitySource,
-      date: string
-    ): Promise<ActivityData | null> => {
-      // Симулираме данни от различни източници
-      const mockData: Record<ActivitySource, Partial<ActivityData>> = {
-        [ActivitySource.GOOGLE_FIT]: {
-          caloriesBurned: 450,
-          steps: 8500,
-          distance: 6.2,
-          activityType: 'walking',
-        },
-        [ActivitySource.SAMSUNG_HEALTH]: {
-          caloriesBurned: 380,
-          steps: 7200,
-          distance: 5.1,
-          activityType: 'mixed',
-        },
-        [ActivitySource.HUAWEI_HEALTH]: {
-          caloriesBurned: 520,
-          steps: 9100,
-          distance: 7.3,
-          activityType: 'running',
-        },
-        [ActivitySource.APPLE_HEALTH]: {
-          caloriesBurned: 410,
-          steps: 8000,
-          distance: 5.8,
-          activityType: 'walking',
-        },
-        [ActivitySource.DEVICE_SENSORS]: {
-          caloriesBurned: 200,
-          steps: 4500,
-          distance: 3.2,
-          activityType: 'basic',
-        },
-        [ActivitySource.MANUAL]: {
-          caloriesBurned: 0,
-          steps: 0,
-          distance: 0,
-        },
-      };
-
-      const baseData = mockData[source];
-      if (!baseData) return null;
-
-      return {
-        source,
-        date,
-        externalId: `${source}_${date}_${Date.now()}`,
-        ...baseData,
-      } as ActivityData;
+  const getTodayActivityData = useCallback(
+    async (appType: HealthAppType): Promise<ActivityData | null> => {
+      try {
+        return await deviceHealth.getTodayActivityData(appType);
+      } catch (error) {
+        console.error('Failed to get activity data:', error);
+        return null;
+      }
     },
     []
   );
 
-  const syncActivityData = useCallback(
-    async (date?: string): Promise<ActivitySummary> => {
-      try {
-        const targetDate = date || new Date().toISOString().split('T')[0];
-        console.log(`🔄 Syncing activity data for ${targetDate}...`);
+  // ============================================================================
+  // BACKEND API (uses activity service)
+  // ============================================================================
 
-        const activities: ActivityData[] = [];
-        let totalCaloriesBurned = 0;
-        let totalSteps = 0;
-        let totalDistance = 0;
+  const syncToBackend = useCallback(
+    async (activityData: ActivityData): Promise<void> => {
+      // Convert HealthAppType to ActivitySource (they're compatible)
+      const syncData: activityApi.ActivitySyncData = {
+        source: activityData.source as unknown as activityApi.ActivitySource,
+        caloriesBurned: activityData.caloriesBurned,
+        steps: activityData.steps,
+        distance: activityData.distance,
+        duration: activityData.duration,
+        activityType: activityData.activityType,
+        date: activityData.date,
+      };
 
-        // Sync from each connected app
-        for (const source of connectedApps) {
-          try {
-            const data = await fetchActivityFromSource(source, targetDate);
-            if (data) {
-              activities.push(data);
-              totalCaloriesBurned += data.caloriesBurned;
-              totalSteps += data.steps || 0;
-              totalDistance += data.distance || 0;
-            }
-          } catch (error) {
-            console.error(`Failed to sync from ${source}:`, error);
-          }
-        }
-
-        const summary: ActivitySummary = {
-          date: targetDate,
-          totalCaloriesBurned: Math.round(totalCaloriesBurned),
-          totalSteps: Math.round(totalSteps),
-          totalDistance: Math.round(totalDistance * 100) / 100,
-          activities,
-          lastSync: new Date().toISOString(),
-          source: activities.length > 0 ? activities[0].source : null,
-        };
-
-        console.log(
-          `✅ Activity sync complete: ${totalCaloriesBurned} cal, ${totalSteps} steps`
-        );
-        return summary;
-      } catch (error) {
-        console.error('❌ Activity sync failed:', error);
-        throw error;
-      }
+      return await activityApi.syncActivityToBackend(syncData);
     },
-    [connectedApps, fetchActivityFromSource]
+    []
   );
 
+  const getActivitySummary = useCallback(
+    async (date?: string): Promise<ActivitySummary> => {
+      return await activityApi.getActivitySummary(date);
+    },
+    []
+  );
+
+  const addManualActivity = useCallback(
+    async (activity: activityApi.ManualActivityInput): Promise<any> => {
+      return await activityApi.addManualActivity(activity);
+    },
+    []
+  );
+
+  const getAvailableActivitySources = useCallback(
+    async (platform: 'ios' | 'android'): Promise<any[]> => {
+      return await activityApi.getAvailableActivitySources(platform);
+    },
+    []
+  );
+
+  const updateActivityPreferences = useCallback(
+    async (preferences: activityApi.ActivityPreferences): Promise<any> => {
+      return await activityApi.updateActivityPreferences(preferences);
+    },
+    []
+  );
+
+  const getActivityPreferences =
+    useCallback(async (): Promise<activityApi.ActivityPreferences> => {
+      return await activityApi.getActivityPreferences();
+    }, []);
+
   // ============================================================================
-  // MANUAL ACTIVITY
+  // UTILITY
   // ============================================================================
 
   const calculateCaloriesFromActivity = useCallback(
@@ -378,163 +188,12 @@ export const useActivityService = () => {
       duration: number;
       intensity: 'low' | 'moderate' | 'high';
     }): number => {
-      // Базови калории per минута за различни дейности
-      const calorieRates: Record<string, Record<string, number>> = {
-        walking: { low: 3, moderate: 4, high: 5 },
-        running: { low: 8, moderate: 10, high: 12 },
-        cycling: { low: 5, moderate: 7, high: 9 },
-        swimming: { low: 6, moderate: 8, high: 11 },
-        gym: { low: 4, moderate: 6, high: 8 },
-        yoga: { low: 2, moderate: 3, high: 4 },
-        dancing: { low: 3, moderate: 5, high: 7 },
-        default: { low: 3, moderate: 4, high: 5 },
-      };
-
-      const activityType = activity.activityType.toLowerCase();
-      const rates = calorieRates[activityType] || calorieRates.default;
-      const rate = rates[activity.intensity];
-
-      return Math.round(rate * activity.duration);
+      return deviceHealth.calculateCaloriesFromActivity(activity);
     },
     []
   );
 
-  const addManualActivity = useCallback(
-    async (activity: {
-      activityType: string;
-      duration: number;
-      intensity: 'low' | 'moderate' | 'high';
-      caloriesBurned?: number;
-      notes?: string;
-      date?: string;
-    }): Promise<ActivityData> => {
-      try {
-        const calculatedCalories =
-          activity.caloriesBurned || calculateCaloriesFromActivity(activity);
-
-        const activityData: ActivityData = {
-          source: ActivitySource.MANUAL,
-          caloriesBurned: calculatedCalories,
-          duration: activity.duration,
-          activityType: activity.activityType,
-          date: activity.date || new Date().toISOString().split('T')[0],
-        };
-
-        console.log(
-          `✅ Manual activity added: ${activity.activityType} - ${calculatedCalories} cal`
-        );
-        return activityData;
-      } catch (error) {
-        console.error('❌ Failed to add manual activity:', error);
-        throw error;
-      }
-    },
-    [calculateCaloriesFromActivity]
-  );
-
-  // ============================================================================
-  // BACKEND API INTEGRATION
-  // ============================================================================
-
-  const syncToBackend = useCallback(
-    async (activityData: ActivityData): Promise<void> => {
-      try {
-        const response = await apiClient.post('/activity/sync', {
-          source: activityData.source,
-          caloriesBurned: activityData.caloriesBurned,
-          steps: activityData.steps,
-          distance: activityData.distance,
-          duration: activityData.duration,
-          externalId: activityData.externalId,
-          activityType: activityData.activityType,
-          date: activityData.date,
-        });
-        console.log('✅ Activity synced to backend');
-        return response.data;
-      } catch (error) {
-        console.error('❌ Failed to sync activity to backend:', error);
-        throw error;
-      }
-    },
-    []
-  );
-
-  const getActivitySummary = useCallback(
-    async (date?: string): Promise<ActivitySummary> => {
-      try {
-        const params = date ? { date } : {};
-        const response = await apiClient.get('/activity/summary', { params });
-        return response.data;
-      } catch (error) {
-        console.error('❌ Failed to get activity summary:', error);
-        throw error;
-      }
-    },
-    []
-  );
-
-  const addManualActivityToBackend = useCallback(
-    async (activity: {
-      activityType: string;
-      duration: number;
-      intensity: 'low' | 'moderate' | 'high';
-      caloriesBurned?: number;
-      notes?: string;
-      date?: string;
-    }): Promise<any> => {
-      try {
-        const response = await apiClient.post('/activity/manual', activity);
-        console.log('✅ Manual activity added via backend');
-        return response.data;
-      } catch (error) {
-        console.error('❌ Failed to add manual activity:', error);
-        throw error;
-      }
-    },
-    []
-  );
-
-  const getAvailableActivitySources = useCallback(
-    async (platform: 'ios' | 'android'): Promise<any[]> => {
-      try {
-        const response = await apiClient.get(`/activity/sources/${platform}`);
-        return response.data;
-      } catch (error) {
-        console.error('❌ Failed to get activity sources:', error);
-        throw error;
-      }
-    },
-    []
-  );
-
-  const updateActivityPreferences = useCallback(
-    async (preferences: {
-      preferredActivitySource?: ActivitySource;
-      enabledSources?: ActivitySource[];
-      autoSyncEnabled?: boolean;
-      syncFrequency?: 'realtime' | 'hourly' | 'daily';
-      activityGoal?: number;
-    }): Promise<any> => {
-      try {
-        const response = await apiClient.put(
-          '/activity/preferences',
-          preferences
-        );
-        console.log('✅ Activity preferences updated');
-        return response.data;
-      } catch (error) {
-        console.error('❌ Failed to update activity preferences:', error);
-        throw error;
-      }
-    },
-    []
-  );
-
-  // ============================================================================
-  // UTILITY METHODS
-  // ============================================================================
-
-  const getConnectedApps = useCallback((): ActivitySource[] => {
+  const getConnectedApps = useCallback((): HealthAppType[] => {
     return Array.from(connectedApps);
   }, [connectedApps]);
 
@@ -550,27 +209,22 @@ export const useActivityService = () => {
     // Initialization
     initialize,
 
-    // Detection & Connection
+    // Detection & Connection (deviceHealth)
     detectAvailableApps,
     connectToApp,
     disconnectFromApp,
+    getTodayActivityData,
 
-    // Data Syncing
-    syncActivityData,
-    fetchActivityFromSource,
-
-    // Manual Activity
-    addManualActivity,
-    calculateCaloriesFromActivity,
-
-    // Backend API
+    // Backend API (activityApi)
     syncToBackend,
     getActivitySummary,
-    addManualActivityToBackend,
+    addManualActivity,
     getAvailableActivitySources,
     updateActivityPreferences,
+    getActivityPreferences,
 
     // Utilities
+    calculateCaloriesFromActivity,
     getConnectedApps,
     hasConnectedApps,
   };
