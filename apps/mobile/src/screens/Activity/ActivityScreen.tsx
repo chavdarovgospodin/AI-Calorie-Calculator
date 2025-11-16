@@ -28,10 +28,6 @@ const ActivityScreen = () => {
     navigation.navigate('ManualActivity');
   };
 
-  const handleHealthAppSettings = () => {
-    navigation.navigate('HealthAppSelection');
-  };
-
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -104,6 +100,17 @@ const ActivityScreen = () => {
         </View>
       </View>
 
+      {/* Action Buttons */}
+      <View style={styles.actions}>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={handleAddActivity}
+        >
+          <Ionicons name="add-circle" size={20} color="#fff" />
+          <Text style={styles.primaryButtonText}>Log Activity</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Activity List */}
       {activity?.activities && activity.activities.length > 0 && (
         <View style={styles.activitiesList}>
@@ -125,25 +132,6 @@ const ActivityScreen = () => {
           ))}
         </View>
       )}
-
-      {/* Action Buttons */}
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={handleAddActivity}
-        >
-          <Ionicons name="add-circle" size={20} color="#fff" />
-          <Text style={styles.primaryButtonText}>Log Activity</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={handleHealthAppSettings}
-        >
-          <Ionicons name="watch" size={20} color="#007AFF" />
-          <Text style={styles.secondaryButtonText}>Health Apps</Text>
-        </TouchableOpacity>
-      </View>
 
       {/* Sync Status */}
       {activity?.source && (

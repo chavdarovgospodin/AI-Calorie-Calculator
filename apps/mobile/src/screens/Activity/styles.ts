@@ -198,22 +198,6 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
-  secondaryButton: {
-    backgroundColor: '#fff',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#007AFF',
-  },
-  secondaryButtonText: {
-    color: '#007AFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
 
   // Sync Info
   syncInfo: {

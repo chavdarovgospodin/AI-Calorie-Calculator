@@ -11,7 +11,7 @@ export const useSelectedHealthApp = () => {
       const app = await AsyncStorage.getItem('selectedHealthApp');
       return app as HealthAppType | null;
     },
-    staleTime: Infinity, // Не се променя често
+    staleTime: 5 * 60 * 1000, // Не се променя често
   });
 };
 

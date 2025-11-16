@@ -91,6 +91,15 @@ const HomeScreen = () => {
         </Text>
       </View>
 
+      {/* show only if not selected */}
+      <TouchableOpacity
+        style={styles.secondaryButton}
+        onPress={() => navigation.navigate('HealthAppSelection')}
+      >
+        <Ionicons name="watch" size={20} color="#007AFF" />
+        <Text style={styles.secondaryButtonText}>Health Apps</Text>
+      </TouchableOpacity>
+
       {/* Main Calorie Display */}
       <View style={styles.calorieCard}>
         <Text style={styles.calorieTitle}>Daily Calories</Text>

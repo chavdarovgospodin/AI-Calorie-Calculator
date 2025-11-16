@@ -46,6 +46,15 @@ export const detectAvailableHealthApps = async (): Promise<HealthApp[]> => {
       isConnected: false,
       icon: HEALTH_APP_ICONS[HealthAppType.GOOGLE_FIT],
     });
+
+    apps.push({
+      source: HealthAppType.HUAWEI_HEALTH,
+      name: HEALTH_APP_NAMES[HealthAppType.HUAWEI_HEALTH],
+      description: 'Sync with Google Fit',
+      isAvailable: true, // TODO: Check if installed
+      isConnected: false,
+      icon: HEALTH_APP_ICONS[HealthAppType.HUAWEI_HEALTH],
+    });
   }
 
   // Always add manual option
