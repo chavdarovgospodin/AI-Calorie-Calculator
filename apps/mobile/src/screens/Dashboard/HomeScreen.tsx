@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { styles } from './styles';
 import { LoadingScreen, RecentFood } from '@/components';
 import { useDashboard } from '@/hooks/useDashboard';
+import { useDeleteFoodEntry } from '@/hooks/useFood';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -26,6 +27,8 @@ const HomeScreen = () => {
     refetch,
     isRefetching,
   } = useDashboard();
+
+  const deleteFoodMutation = useDeleteFoodEntry();
 
   if (error) {
     return (
@@ -55,23 +58,25 @@ const HomeScreen = () => {
     return '#F44336';
   };
 
-  const handleDeleteFood = useCallback((foodId: string) => {
-    Alert.alert(
-      'Delete Food',
-      'Are you sure you want to remove this food entry?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            // TODO: Implement delete functionality
-            console.log('Delete food:', foodId);
+  const handleDeleteFood = useCallback(
+    (foodId: string) => {
+      Alert.alert(
+        'Delete Food',
+        'Are you sure you want to remove this food entry?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              deleteFoodMutation.mutate(foodId);
+            },
           },
-        },
-      ]
-    );
-  }, []);
+        ]
+      );
+    },
+    [deleteFoodMutation]
+  );
 
   if (isRefetching || isLoading) {
     return <LoadingScreen />;

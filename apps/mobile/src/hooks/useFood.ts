@@ -64,3 +64,29 @@ export const useSaveFoodEntry = () => {
     },
   });
 };
+
+export const useDeleteFoodEntry = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<any, Error, string>({
+    mutationFn: async (foodId: string) => {
+      return apiClient.delete(`/food/entries/${foodId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+
+      Toast.show({
+        type: 'success',
+        text1: 'Food Deleted!',
+        text2: 'Entry removed from your diary',
+      });
+    },
+    onError: (error: any) => {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to delete',
+        text2: error.response?.data?.message || 'Please try again',
+      });
+    },
+  });
+};
